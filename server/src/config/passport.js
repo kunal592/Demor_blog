@@ -1,46 +1,24 @@
 
 import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { prisma } from './database.js';
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL,
-      scope: ['profile', 'email'],
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        const { id: googleId, displayName: name, emails, photos } = profile;
-        const email = emails[0].value;
-        const avatar = photos[0].value;
+const jwtOptions = {
+  jwtFromRequest: (req) => req.cookies.accessToken || null,
+  secretOrKey: process.env.JWT_SECRET,
+};
 
-        let user = await prisma.user.findUnique({ where: { email } });
-
-        if (user) {
-          user = await prisma.user.update({
-            where: { email },
-            data: { name, avatar },
-          });
-        } else {
-          user = await prisma.user.create({
-            data: {
-              googleId,
-              email,
-              name,
-              avatar,
-            },
-          });
-        }
-        return done(null, user);
-      } catch (error) {
-        return done(error, null);
-      }
+passport.use(new JwtStrategy(jwtOptions, async (payload, done) => {
+  try {
+    if (payload.type !== 'access') {
+      return done(null, false, { message: 'Invalid token type' });
     }
-  )
-);
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    return user ? done(null, user) : done(null, false);
+  } catch (error) {
+    return done(error, false);
+  }
+}));
 
 passport.serializeUser((user, done) => {
   done(null, user.id);
