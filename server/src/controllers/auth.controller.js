@@ -39,8 +39,8 @@ export const googleLogin = async (req, res) => {
 
     const user = await prisma.user.upsert({
         where: { email },
-        update: { name, picture },
-        create: { email, name, picture, provider: 'GOOGLE' },
+        update: { name, avatar: picture },
+        create: { email, name, avatar: picture, provider: 'GOOGLE' },
     });
 
     const { accessToken, refreshToken } = generateTokens(user.id);
