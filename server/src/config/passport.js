@@ -21,22 +21,19 @@ passport.use(
 
         if (user) {
           user = await prisma.user.update({
-            where: { id: user.id },
-            data: { googleId, name, avatar },
+            where: { email },
+            data: { name, avatar },
           });
         } else {
-          const role = email === process.env.ADMIN_EMAIL ? 'ADMIN' : 'USER';
           user = await prisma.user.create({
             data: {
+              googleId,
               email,
               name,
               avatar,
-              googleId,
-              role,
             },
           });
         }
-
         return done(null, user);
       } catch (error) {
         return done(error, null);
