@@ -33,19 +33,11 @@ class AuthService {
    * - If expired, axios interceptor triggers `/auth/refresh`
    */
   async getCurrentUser(): Promise<User> {
-    try {
-      const res = await apiClient.get<ApiResponse<{ user: User }>>('/auth/me');
-      if (res.data.success && res.data.data?.user) {
-        return res.data.data.user;
-      }
-      throw new Error(res.data.message || 'No user found');
-    } catch (err: any) {
-      // Handle expired session
-      if (err.response?.status === 401) {
-        throw new Error('Session expired. Please log in again.');
-      }
-      throw new Error(err.response?.data?.message || 'Failed to get user');
+    const res = await apiClient.get<ApiResponse<{ user: User }>>('/auth/me');
+    if (res.data.success && res.data.data?.user) {
+      return res.data.data.user;
     }
+    throw new Error(res.data.message || 'No user found');
   }
 
   /**

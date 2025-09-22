@@ -79,10 +79,7 @@ class ApiClient {
             this.isRefreshing = false;
             this.failedQueue.forEach(({ reject }) => reject(refreshError));
             this.failedQueue = [];
-
-            // Force logout
             toast.error('Session expired, please log in again.');
-            window.location.replace('/login');
             return Promise.reject(refreshError);
           }
         }
