@@ -1,3 +1,4 @@
+
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database.js';
 
@@ -96,4 +97,8 @@ export const logoutUser = async (req, res) => {
   res.clearCookie('refreshToken');
 
   res.status(200).json({ success: true, message: 'Logged out successfully' });
+};
+
+export const loginFailure = (req, res) => {
+  res.status(401).json({ success: false, message: 'Google authentication failed' });
 };

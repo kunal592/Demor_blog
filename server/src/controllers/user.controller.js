@@ -1,3 +1,4 @@
+
 import { prisma } from '../config/database.js';
 
 /**
@@ -181,5 +182,35 @@ export const getUserDashboard = async (req, res) => {
       recentLikes: recentLikes.map(like => like.blog),
       recentBookmarks: recentBookmarks.map(bookmark => bookmark.blog)
     }
+  });
+};
+
+/**
+ * Get all blogs authored by the user
+ */
+export const getUserBlogs = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const take = parseInt(limit);
+
+  const [blogs, totalCount] = await Promise.all([
+    prisma.blog.findMany({
+      where: { authorId: req.user.id },
+      include: {
+        _count: { select: { likes: true, bookmarks: true, comments: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+    }),
+    prisma.blog.count({ where: { authorId: req.user.id } }),
+  ]);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      blogs,
+      pagination: { page: +page, limit: +limit, total: totalCount, pages: Math.ceil(totalCount / take) },
+    },
   });
 };

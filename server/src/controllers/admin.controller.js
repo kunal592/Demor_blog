@@ -1,3 +1,4 @@
+
 import { prisma } from '../config/database.js';
 
 /**
@@ -112,9 +113,38 @@ export const getAllUsers = async (req, res) => {
 };
 
 /**
+ * Get user by ID
+ */
+export const getUserById = async (req, res) => {
+  const { id } = req.params;
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      avatar: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
+      _count: {
+        select: { blogs: true, likes: true, bookmarks: true, comments: true },
+      },
+    },
+  });
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  res.status(200).json({ success: true, data: { user } });
+};
+
+
+/**
  * Update user role or status
  */
-export const updateUser = async (req, res) => {
+export const updateUserRole = async (req, res) => {
   const { id } = req.params;
   const { role, isActive } = req.body;
 

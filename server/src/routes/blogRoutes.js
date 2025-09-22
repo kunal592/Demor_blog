@@ -1,3 +1,4 @@
+
 /**
  * Blog routes for CRUD operations, likes, bookmarks, and interactions
  */
@@ -33,6 +34,28 @@ const generateSummary = async (content) => {
     return null;
   }
 };
+
+
+// --- Get all tags ---
+router.get(
+  '/tags',
+  asyncHandler(async (req, res) => {
+    const tags = await prisma.blog.findMany({
+      where: { isPublished: true },
+      select: { tags: true },
+    });
+    const tagCounts = tags.flatMap(b => b.tags).reduce((acc, tag) => {
+      acc[tag] = (acc[tag] || 0) + 1;
+      return acc;
+    }, {});
+    const sortedTags = Object.entries(tagCounts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([tag, count]) => ({ tag, count }));
+
+    res.json({ success: true, data: { tags: sortedTags } });
+  })
+);
+
 
 // --- Get blogs ---
 router.get(
