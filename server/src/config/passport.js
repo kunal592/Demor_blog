@@ -1,6 +1,6 @@
 
 import passport from 'passport';
-import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
+import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt/lib/index.js';
 import { prisma } from './database.js';
 
 const jwtOptions = {
