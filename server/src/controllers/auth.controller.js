@@ -35,12 +35,12 @@ export const googleLogin = async (req, res) => {
         audience: process.env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
-    const { email, name, picture } = payload;
+    const { sub, email, name, picture } = payload;
 
     const user = await prisma.user.upsert({
         where: { email },
-        update: { name, avatar: picture },
-        create: { email, name, avatar: picture, provider: 'GOOGLE' },
+        update: { name, avatar: picture, googleId: sub },
+        create: { email, name, avatar: picture, googleId: sub },
     });
 
     const { accessToken, refreshToken } = generateTokens(user.id);
@@ -119,7 +119,7 @@ export const getProfile = (req, res) => {
 
 export const logoutUser = async (req, res) => {
     await prisma.user.update({
-        where: { id: req.user.id },
+        where: { id: req.user..id },
         data: { refreshToken: null },
     });
 
