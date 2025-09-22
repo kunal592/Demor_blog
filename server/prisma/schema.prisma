@@ -1,0 +1,114 @@
+// Prisma schema for blog application with comprehensive user and blog management
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with Google OAuth integration and role-based access
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  avatar        String?
+  googleId      String?  @unique
+  role          Role     @default(USER)
+  refreshToken  String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // User relationships
+  blogs         Blog[]
+  likes         Like[]
+  bookmarks     Bookmark[]
+  comments      Comment[]
+
+  @@map("users")
+}
+
+// Blog model with markdown content and AI summarization
+model Blog {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String   // Markdown content
+  excerpt     String?  // Manual excerpt
+  summary     String?  // AI-generated summary
+  coverImage  String?
+  isPublished Boolean  @default(false)
+  isFeatured  Boolean  @default(false)
+  readTime    Int?     // Estimated read time in minutes
+  tags        String[] // Array of tags
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Blog relationships
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    String
+  likes       Like[]
+  bookmarks   Bookmark[]
+  comments    Comment[]
+
+  @@map("blogs")
+}
+
+// Like model for blog interactions
+model Like {
+  id     String @id @default(cuid())
+  userId String
+  blogId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, blogId]) // Prevent duplicate likes
+  @@map("likes")
+}
+
+// Bookmark model for user's saved blogs
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  blogId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, blogId]) // Prevent duplicate bookmarks
+  @@map("bookmarks")
+}
+
+// Comment model for blog discussions
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  isApproved Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Comment relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId String
+
+  // Self-referencing for nested comments
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  parentId String?
+  replies  Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+// User roles enum
+enum Role {
+  USER
+  ADMIN
+}
