@@ -1,9 +1,3 @@
-/**
- * Main Express server entry point
- * - Sets up security, CORS, cookies, logging, rate limiting
- * - Registers all API routes
- * - Handles errors and graceful shutdown
- */
 
 import express from 'express';
 import cors from 'cors';
@@ -12,8 +6,11 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import passport from 'passport';
+import session from 'express-session';
 
-// Custom middleware
+// Import custom middleware and routes
+import './config/passport.js'; // Passport configuration
 import { errorHandler } from './middleware/errorHandler.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { blogRoutes } from './routes/blogRoutes.js';
@@ -25,68 +22,59 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5003;
 
-/* ----------------------------
-   🔒 Security (Helmet)
-   - Protects against common attacks
-   - Disables CSP in dev to allow Google OAuth scripts
------------------------------ */
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-  })
-);
+// Security Middleware
+app.use(helmet({ contentSecurityPolicy: false }));
 
-/* ----------------------------
-   🌍 CORS (Cross-Origin Resource Sharing)
-   - Allows requests from frontend (Vite on port 5173)
-   - Supports credentials (cookies)
------------------------------ */
+// CORS Configuration
 app.use(
   cors({
-    origin: process.env.CLIENT_URL, // Using a single string from .env for a more explicit and reliable configuration.
+    origin: process.env.CLIENT_URL,
     credentials: true,
   })
 );
 
-/* ----------------------------
-   ⚡ Rate Limiting
-   - Prevents abuse (DDOS, spam requests)
-   - Increased limit for dev (2000 per 15 min)
-   - Skips refresh & auth check to prevent infinite loops
------------------------------ */
+// Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
-  max: 2000, // per IP
+  windowMs: 15 * 60 * 1000,
+  max: 2000,
   skip: (req) =>
-    req.path.startsWith('/api/auth/refresh') || // skip refresh route
-    req.path.startsWith('/api/auth/me'), // skip auth check
+    req.path.startsWith('/api/auth/refresh') || req.path.startsWith('/api/auth/me'),
 });
 
-// Apply limiter only in production
 if (process.env.NODE_ENV === 'production') {
   app.use(limiter);
 }
 
-/* ----------------------------
-   🛠 Core Middleware
------------------------------ */
-app.use(express.json({ limit: '10mb' })); // parse JSON
-app.use(express.urlencoded({ extended: true, limit: '10mb' })); // parse form data
-app.use(cookieParser()); // parse cookies
-app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined')); // logging
+// Core Middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
+app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
-/* ----------------------------
-   🚦 API Routes
------------------------------ */
+// Session and Passport Middleware
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'your_default_secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    },
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 
-/* ----------------------------
-   ❤️ Health Check
-   - Simple status endpoint for monitoring
------------------------------ */
+// Health Check
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
@@ -95,9 +83,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-/* ----------------------------
-   🛑 404 Handler
------------------------------ */
+// 404 Handler
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
@@ -105,14 +91,10 @@ app.use('*', (req, res) => {
   });
 });
 
-/* ----------------------------
-   ⚠️ Global Error Handler
------------------------------ */
+// Global Error Handler
 app.use(errorHandler);
 
-/* ----------------------------
-   🔌 Graceful Shutdown
------------------------------ */
+// Graceful Shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
   process.exit(0);
@@ -122,9 +104,7 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-/* ----------------------------
-   🚀 Start Server
------------------------------ */
+// Start Server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📝 Blog API available at http://localhost:${PORT}/api`);
