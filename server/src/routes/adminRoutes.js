@@ -6,7 +6,7 @@ import {
   getUserById,
   updateUserRole,
   deleteUser,
-  getAdminStats as getDashboardStats,
+  getAdminStats,
 } from '../controllers/admin.controller.js';
 
 const router = express.Router();
@@ -24,6 +24,6 @@ router.put('/users/:id/role', asyncHandler(updateUserRole));
 router.delete('/users/:id', asyncHandler(deleteUser));
 
 // Route to get dashboard statistics
-router.get('/dashboard-stats', asyncHandler(getDashboardStats));
+router.get('/dashboard-stats', asyncHandler(getAdminStats));
 
 export { router as adminRoutes };
