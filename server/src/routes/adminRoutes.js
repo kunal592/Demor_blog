@@ -6,7 +6,7 @@ import {
   getUserById,
   updateUserRole,
   deleteUser,
-  getDashboardStats,
+  getAdminStats as getDashboardStats,
 } from '../controllers/admin.controller.js';
 
 const router = express.Router();
