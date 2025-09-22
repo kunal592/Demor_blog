@@ -119,7 +119,7 @@ export const getProfile = (req, res) => {
 
 export const logoutUser = async (req, res) => {
     await prisma.user.update({
-        where: { id: req.user..id },
+        where: { id: req.user.id },
         data: { refreshToken: null },
     });
 
