@@ -116,25 +116,35 @@ export const refreshToken = async (req, res) => {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
     const user = await prisma.user.findFirst({
-      where: { id: decoded.userId, refreshToken, isActive: true }
+      where: {
+        id: decoded.userId,
+        isActive: true,
+        NOT: {
+          refreshToken: null,
+        },
+      },
     });
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+      return res.status(401).json({ success: false, message: 'Invalid refresh token or user is inactive' });
     }
-
+    
     const tokens = generateTokens(user.id);
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { refreshToken: tokens.refreshToken }
+      data: { refreshToken: tokens.refreshToken },
     });
 
     setTokenCookies(res, tokens.accessToken, tokens.refreshToken);
 
     res.status(200).json({ success: true, message: 'Token refreshed successfully', data: {} });
   } catch (error) {
-    res.status(401).json({ success: false, message: 'Invalid refresh token' });
+     if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
+    }
+    console.error('Refresh token error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error during token refresh' });
   }
 };
 
