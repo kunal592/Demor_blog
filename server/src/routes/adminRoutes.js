@@ -1,33 +1,29 @@
+
 import express from 'express';
-import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import {
-  getAdminStats,
   getAllUsers,
-  updateUser,
+  getUserById,
+  updateUserRole,
   deleteUser,
-  getAllBlogs,
-  updateBlog,
-  deleteBlog,
-  getModerationQueue,
-  moderateComment
+  getDashboardStats,
 } from '../controllers/admin.controller.js';
 
 const router = express.Router();
 
-// Middleware for all admin routes
-router.use(authenticate);
-router.use(requireAdmin);
-
-// Routes
-router.get('/stats', asyncHandler(getAdminStats));
+// Route to get all users
 router.get('/users', asyncHandler(getAllUsers));
-router.put('/users/:id', asyncHandler(updateUser));
+
+// Route to get a single user by ID
+router.get('/users/:id', asyncHandler(getUserById));
+
+// Route to update a user's role
+router.put('/users/:id/role', asyncHandler(updateUserRole));
+
+// Route to delete a user
 router.delete('/users/:id', asyncHandler(deleteUser));
-router.get('/blogs', asyncHandler(getAllBlogs));
-router.put('/blogs/:id', asyncHandler(updateBlog));
-router.delete('/blogs/:id', asyncHandler(deleteBlog));
-router.get('/moderation', asyncHandler(getModerationQueue));
-router.put('/comments/:id', asyncHandler(moderateComment));
+
+// Route to get dashboard statistics
+router.get('/dashboard-stats', asyncHandler(getDashboardStats));
 
 export { router as adminRoutes };
