@@ -265,3 +265,52 @@ export const getMyBlogs = async (req, res) => {
     data: { blogs, pagination: { page: +page, limit: +limit, total: totalCount, pages: Math.ceil(totalCount / take) } }
   });
 };
+
+
+/**
+ * Create a new comment on a blog post
+ */
+export const createComment = async (req, res) => {
+  const { content } = req.body;
+  const { id: blogId } = req.params;
+  const userId = req.user.id;
+
+  if (!content) {
+    return res.status(400).json({ success: false, message: 'Comment content is required' });
+  }
+
+  try {
+    const comment = await prisma.comment.create({
+      data: {
+        content,
+        blogId,
+        userId,
+      },
+      include: {
+        user: { select: { id: true, name: true, avatar: true } },
+      },
+    });
+    res.status(201).json({ success: true, data: { comment } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Something went wrong' });
+  }
+};
+
+/**
+ * Get all comments for a blog post
+ */
+export const getComments = async (req, res) => {
+  const { id: blogId } = req.params;
+  try {
+    const comments = await prisma.comment.findMany({
+      where: { blogId },
+      include: {
+        user: { select: { id: true, name: true, avatar: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.status(200).json({ success: true, data: { comments } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Something went wrong' });
+  }
+};

@@ -16,6 +16,9 @@ import { authRoutes } from './routes/authRoutes.js';
 import { blogRoutes } from './routes/blogRoutes.js';
 import { adminRoutes } from './routes/adminRoutes.js';
 import { userRoutes } from './routes/userRoutes.js';
+import { contactRoutes } from './routes/contactRoutes.js';
+import { notificationRoutes } from './routes/notificationRoutes.js';
+import { commentRoutes } from './routes/commentRoutes.js';
 
 dotenv.config();
 
@@ -71,8 +74,11 @@ app.use(passport.session());
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use('/api/blogs/:slug/comments', commentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {

@@ -32,6 +32,7 @@ const Navbar: React.FC = () => {
   const navigationItems = [
     { label: 'Home', path: '/' },
     { label: 'Blogs', path: '/blogs' },
+    { label: 'Contact Us', path: '/contact' },
   ];
 
   return (

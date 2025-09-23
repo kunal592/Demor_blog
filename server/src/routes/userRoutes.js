@@ -8,7 +8,9 @@ import {
   getUserStats,
   updateUserProfile,
   getUserDashboard,
-  getUserBlogs
+  getUserBlogs,
+  followUser,
+  unfollowUser
 } from '../controllers/user.controller.js';
 
 const router = express.Router();
@@ -30,5 +32,9 @@ router.get('/dashboard', authenticate, asyncHandler(getUserDashboard));
 
 // Blogs
 router.get('/blogs', authenticate, asyncHandler(getUserBlogs));
+
+// Follow
+router.post('/:userId/follow', authenticate, asyncHandler(followUser));
+router.delete('/:userId/unfollow', authenticate, asyncHandler(unfollowUser));
 
 export { router as userRoutes };

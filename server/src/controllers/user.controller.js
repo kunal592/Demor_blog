@@ -214,3 +214,49 @@ export const getUserBlogs = async (req, res) => {
     },
   });
 };
+
+/**
+ * Follow a user
+ */
+export const followUser = async (req, res) => {
+  const { userId } = req.params;
+  const followerId = req.user.id;
+
+  if (userId === followerId) {
+    return res.status(400).json({ success: false, message: 'You cannot follow yourself' });
+  }
+
+  try {
+    await prisma.follows.create({
+      data: {
+        followerId,
+        followingId: userId,
+      },
+    });
+    res.status(200).json({ success: true, message: 'User followed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Something went wrong' });
+  }
+};
+
+/**
+ * Unfollow a user
+ */
+export const unfollowUser = async (req, res) => {
+  const { userId } = req.params;
+  const followerId = req.user.id;
+
+  try {
+    await prisma.follows.delete({
+      where: {
+        followerId_followingId: {
+          followerId,
+          followingId: userId,
+        },
+      },
+    });
+    res.status(200).json({ success: true, message: 'User unfollowed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Something went wrong' });
+  }
+};

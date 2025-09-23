@@ -27,6 +27,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import UserProfile from './pages/UserProfile';
 import LikedBlogs from './pages/LikedBlogs';
 import BookmarkedBlogs from './pages/BookmarkedBlogs';
+import ContactUs from './pages/ContactUs';
 
 // Auth service + types
 import { authService } from './services/authService';
@@ -141,6 +142,7 @@ function App() {
                 path="/login"
                 element={user ? <Navigate to="/dashboard" replace /> : <Login />}
               />
+              <Route path="/contact" element={<ContactUs />} />
 
               {/* ---------------- Protected Routes ---------------- */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

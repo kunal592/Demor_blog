@@ -28,6 +28,12 @@ model User {
   likes         Like[]
   bookmarks     Bookmark[]
   comments      Comment[]
+  following     Follow[] @relation("UserFollowing")
+  followers     Follow[] @relation("UserFollowers")
+  commentLikes  CommentLike[]
+
+  notifications        Notification[] @relation("UserNotifications")
+  actedInNotifications Notification[] @relation("ActorNotifications")
 
   @@map("users")
 }
@@ -50,11 +56,12 @@ model Blog {
   updatedAt   DateTime @updatedAt
 
   // Blog relationships
-  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId    String
-  likes       Like[]
-  bookmarks   Bookmark[]
-  comments    Comment[]
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId      String
+  likes         Like[]
+  bookmarks     Bookmark[]
+  comments      Comment[]
+  notifications Notification[]
 
   @@map("blogs")
 }
@@ -88,25 +95,99 @@ model Bookmark {
 
 // Comment model for blog discussions
 model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  isApproved Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  content    String
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Comment relationships
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-  blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
-  blogId String
-
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  blog      Blog          @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId    String
+  likes     CommentLike[]
   // Self-referencing for nested comments
-  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
-  parentId String?
-  replies  Comment[] @relation("CommentReplies")
+  parent    Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  parentId  String?
+  replies   Comment[]     @relation("CommentReplies")
+
+  notifications Notification[]
 
   @@map("comments")
 }
+
+// Like model for comment interactions
+model CommentLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId String
+
+  @@unique([userId, commentId])
+  @@map("comment_likes")
+}
+
+
+// Follow model for user relationships
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower    User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@map("follows")
+}
+
+// ContactRequest model for user inquiries
+model ContactRequest {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  message    String
+  isResolved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("contact_requests")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  // The user who receives the notification
+  user      User             @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  // The user who triggered the notification
+  actor     User             @relation("ActorNotifications", fields: [actorId], references: [id], onDelete: Cascade)
+  actorId   String
+
+  blog      Blog?            @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId    String?
+
+  comment   Comment?         @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId String?
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  NEW_COMMENT
+  COMMENT_LIKE
+  COMMENT_REPLY
+  NEW_FOLLOWER
+}
+
 
 // User roles enum
 enum Role {
