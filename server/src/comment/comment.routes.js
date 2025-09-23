@@ -1,11 +1,11 @@
 import express from 'express';
-import { protect } from '../middleware/authMiddleware.js';
-import { createComment, likeComment } from '../controllers/commentController.js';
+import { authenticate } from '../middleware/auth.js';
+import { createComment, likeComment } from './comment.controller.js';
 
 const router = express.Router({ mergeParams: true });
 
 // All routes are protected
-router.use(protect);
+router.use(authenticate);
 
 router.route('/').post(createComment);
 router.route('/:commentId/like').post(likeComment);

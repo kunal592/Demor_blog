@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { getComments, createComment } from '../services/commentService';
 import Comment from './Comment';
+import { Comment as CommentType } from '../types';
 
-const CommentList = ({ slug }) => {
-  const [comments, setComments] = useState([]);
+interface CommentListProps {
+  slug: string;
+}
+
+const CommentList: React.FC<CommentListProps> = ({ slug }) => {
+  const [comments, setComments] = useState<CommentType[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchComments = async () => {
     try {
+      setError(null);
       const res = await getComments(slug);
       setComments(res.data);
     } catch (err) {
@@ -17,12 +23,16 @@ const CommentList = ({ slug }) => {
   };
 
   useEffect(() => {
-    fetchComments();
+    if (slug) {
+        fetchComments();
+    }
   }, [slug]);
 
-  const handleAddComment = async (e) => {
+  const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newComment.trim()) return;
     try {
+      setError(null);
       await createComment(slug, newComment);
       setNewComment('');
       fetchComments();

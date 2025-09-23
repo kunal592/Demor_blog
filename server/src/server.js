@@ -10,15 +10,15 @@ import passport from 'passport';
 import session from 'express-session';
 
 // Import custom middleware and routes
-import './config/passport.js'; // Passport configuration
+import './auth/passport.js'; // Passport configuration
 import { errorHandler } from './middleware/errorHandler.js';
-import { authRoutes } from './routes/authRoutes.js';
-import { blogRoutes } from './routes/blogRoutes.js';
-import { adminRoutes } from './routes/adminRoutes.js';
-import { userRoutes } from './routes/userRoutes.js';
-import { contactRoutes } from './routes/contactRoutes.js';
-import { notificationRoutes } from './routes/notificationRoutes.js';
-import { commentRoutes } from './routes/commentRoutes.js';
+import { authRoutes } from './auth/auth.routes.js';
+import { blogRoutes } from './blog/blog.routes.js';
+import { adminRoutes } from './blog/admin.routes.js';
+import { userRoutes } from './auth/user.routes.js';
+import { contactRoutes } from './notification/contact.routes.js';
+import { notificationRoutes } from './notification/notification.routes.js';
+import { commentRoutes } from './comment/comment.routes.js';
 
 dotenv.config();
 

@@ -1,4 +1,4 @@
-import { prisma } from '../config/prisma.js';
+import { prisma } from '../config/database.js';
 
 // @desc    Get all notifications for the logged-in user
 // @route   GET /api/notifications

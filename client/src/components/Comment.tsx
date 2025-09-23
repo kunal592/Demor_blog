@@ -1,27 +1,38 @@
 import React, { useState } from 'react';
 import { likeComment, createComment } from '../services/commentService';
+import { Comment as CommentType } from '../types';
 
-const Comment = ({ comment, slug, onCommentAdded }) => {
+interface CommentProps {
+  comment: CommentType;
+  slug: string;
+  onCommentAdded: () => void;
+}
+
+const Comment: React.FC<CommentProps> = ({ comment, slug, onCommentAdded }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLike = async () => {
     try {
+      setError(null);
       await likeComment(slug, comment.id);
-      // TODO: Update the UI to reflect the new like count
+      onCommentAdded();
     } catch (err) {
       setError('Failed to like comment');
     }
   };
 
-  const handleReplySubmit = async (e) => {
+  const handleReplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!replyContent.trim()) return;
+
     try {
+      setError(null);
       await createComment(slug, replyContent, comment.id);
       setReplyContent('');
       setShowReplyForm(false);
-      onCommentAdded(); // Callback to refresh the comment list
+      onCommentAdded();
     } catch (err) {
       setError('Failed to add reply');
     }
@@ -29,6 +40,7 @@ const Comment = ({ comment, slug, onCommentAdded }) => {
 
   return (
     <div style={{ border: '1px solid #ccc', borderRadius: '5px', padding: '1rem', marginBottom: '1rem' }}>
+      <p><strong>{comment.author?.name || 'Anonymous'}</strong> - {new Date(comment.createdAt).toLocaleDateString()}</p>
       <p>{comment.content}</p>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
         <button onClick={handleLike}>Like</button>

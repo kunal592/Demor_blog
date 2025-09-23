@@ -11,7 +11,7 @@ import {
   getUserBlogs,
   followUser,
   unfollowUser
-} from '../controllers/user.controller.js';
+} from './user.controller.js';
 
 const router = express.Router();
 

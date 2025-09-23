@@ -1,15 +1,15 @@
 import express from 'express';
-import { protect } from '../middleware/authMiddleware.js';
+import { authenticate } from '../middleware/auth.js';
 import {
   getNotifications,
   markAsRead,
   markAllAsRead,
-} from '../controllers/notificationController.js';
+} from './notification.controller.js';
 
 const router = express.Router();
 
 // All routes are protected
-router.use(protect);
+router.use(authenticate);
 
 router.get('/', getNotifications);
 router.patch('/:id/read', markAsRead);

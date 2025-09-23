@@ -1,7 +1,7 @@
 
 import passport from 'passport';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt/lib/index.js';
-import { prisma } from './database.js';
+import { prisma } from '../config/database.js';
 
 const jwtOptions = {
   jwtFromRequest: (req) => req.cookies.accessToken || null,

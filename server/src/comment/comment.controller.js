@@ -1,4 +1,4 @@
-import { prisma } from '../config/prisma.js';
+import { prisma } from '../config/database.js';
 
 // @desc    Create a new comment
 // @route   POST /api/blogs/:slug/comments
