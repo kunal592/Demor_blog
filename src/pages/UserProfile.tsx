@@ -12,6 +12,7 @@ const UserProfile = () => {
 
   useEffect(() => {
     const fetchUserAndBlogs = async () => {
+      if (!userId) return;
       try {
         const [userResponse, blogsResponse] = await Promise.all([
           apiClient.get(`/users/${userId}`),
@@ -27,6 +28,7 @@ const UserProfile = () => {
   }, [userId]);
 
   const handleFollow = async () => {
+    if (!userId) return;
     try {
       await apiClient.post(`/users/${userId}/follow`);
       setIsFollowing(true);
@@ -36,6 +38,7 @@ const UserProfile = () => {
   };
 
   const handleUnfollow = async () => {
+    if (!userId) return;
     try {
       await apiClient.delete(`/users/${userId}/unfollow`);
       setIsFollowing(false);
@@ -58,6 +61,7 @@ const UserProfile = () => {
   };
 
   const handlePostComment = async (blogId) => {
+    if (!newComment.trim()) return;
     try {
       const response = await apiClient.post(`/blogs/${blogId}/comments`, {
         content: newComment,
