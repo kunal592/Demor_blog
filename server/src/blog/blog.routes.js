@@ -78,12 +78,22 @@ router.get(
       ...(author && { author: { name: { contains: author, mode: 'insensitive' } } }),
       ...(featured === 'true' && { isFeatured: true }),
     };
+    
+    const allowedSortBy = ['createdAt', 'updatedAt', 'viewCount', 'likes', 'comments'];
+    const safeSortBy = allowedSortBy.includes(sortBy) ? sortBy : 'createdAt';
+    const safeSortOrder = ['asc', 'desc'].includes(sortOrder) ? sortOrder : 'desc';
+    
+    const orderBy =
+      safeSortBy === 'likes' || safeSortBy === 'comments'
+        ? { [safeSortBy]: { _count: safeSortOrder } }
+        : { [safeSortBy]: safeSortOrder };
+
 
     const [blogs, totalCount] = await Promise.all([
       prisma.blog.findMany({
         where,
         include: { author: { select: { id: true, name: true, avatar: true } }, _count: true },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy,
         skip,
         take: parseInt(limit),
       }),
