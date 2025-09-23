@@ -8,7 +8,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Heart, Bookmark, Eye, Calendar, User, Tag } from 'lucide-react';
 import { blogService } from '../services/blogService';
 import { Blog, BlogFilters } from '../types';
-import Loading from '../components/UI/Loading';
+import Loading from '../components/Loading';
 
 const BlogList: React.FC = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);

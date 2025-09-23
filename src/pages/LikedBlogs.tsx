@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { Heart, Eye, Calendar, User, ArrowLeft } from 'lucide-react';
 import { apiClient } from '../services/apiClient';
 import { Blog, ApiResponse, PaginationData } from '../types';
-import Loading from '../components/UI/Loading';
+import Loading from '../components/Loading';
 
 const LikedBlogs: React.FC = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);

@@ -11,9 +11,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 
 // Layout Components
-import Navbar from './components/Layout/Navbar';
-import Footer from './components/Layout/Footer';
-import Loading from './components/UI/Loading';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import Loading from './components/Loading';
 
 // Pages
 import Home from './pages/Home';

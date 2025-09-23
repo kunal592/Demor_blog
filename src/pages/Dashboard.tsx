@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { PenTool, Heart, Bookmark, Eye, TrendingUp, Plus, Edit3, BarChart3 } from 'lucide-react';
 import { apiClient } from '../services/apiClient';
 import { DashboardData, ApiResponse } from '../types';
-import Loading from '../components/UI/Loading';
+import Loading from '../components/Loading';
 import { useAuth } from '../App';
 
 const Dashboard: React.FC = () => {

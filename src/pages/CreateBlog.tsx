@@ -12,7 +12,7 @@ import rehypeHighlight from 'rehype-highlight';
 import toast from 'react-hot-toast';
 import { blogService } from '../services/blogService';
 import { BlogFormData } from '../types';
-import Loading from '../components/UI/Loading';
+import Loading from '../components/Loading';
 
 const CreateBlog: React.FC = () => {
   const [formData, setFormData] = useState<BlogFormData>({

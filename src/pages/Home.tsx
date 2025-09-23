@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Users, BookOpen, Heart, TrendingUp, Sparkles } from 'lucide-react';
 import { blogService } from '../services/blogService';
 import { Blog } from '../types';
-import Loading from '../components/UI/Loading';
+import Loading from '../components/Loading';
 import { useAuth } from '../App';
 
 const Home: React.FC = () => {
