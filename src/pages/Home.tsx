@@ -24,22 +24,21 @@ const Home: React.FC = () => {
   const loadHomeData = async () => {
     try {
       setLoading(true);
-      
-      // Fetch featured blogs
-      const featuredResponse = await blogService.getBlogs({ 
-        featured: true, 
-        limit: 3,
-        sortBy: 'viewCount',
-        sortOrder: 'desc'
-      });
-      
-      // Fetch recent blogs
-      const recentResponse = await blogService.getBlogs({ 
-        limit: 6,
-        sortBy: 'createdAt',
-        sortOrder: 'desc'
-      });
-      
+
+      const [featuredResponse, recentResponse] = await Promise.all([
+        blogService.getBlogs({ 
+          featured: true, 
+          limit: 3,
+          sortBy: 'viewCount',
+          sortOrder: 'desc'
+        }),
+        blogService.getBlogs({ 
+          limit: 6,
+          sortBy: 'createdAt',
+          sortOrder: 'desc'
+        })
+      ]);
+
       setFeaturedBlogs(featuredResponse.blogs);
       setRecentBlogs(recentResponse.blogs);
     } catch (error) {
