@@ -189,7 +189,7 @@ export const getAllBlogs = async (req, res) => {
     ...(search && { OR: [{ title: { contains: search, mode: 'insensitive' } }, { content: { contains: search, mode: 'insensitive' } }] }),
     ...(author && { author: { name: { contains: author, mode: 'insensitive' } } }),
     ...(isPublished !== undefined && { isPublished: isPublished === 'true' }),
-    ...(isFeatured !== undefined && { isFeatured: isFeatured === 'true' })
+    ...(isFeatured !== undefined && { isFeatured: isFeatured === 'true' } )
   };
 
   const [blogs, totalCount] = await Promise.all([
@@ -280,7 +280,7 @@ export const moderateComment = async (req, res) => {
   const comment = await prisma.comment.update({
     where: { id },
     data: { isApproved },
-    include: { user: { select: { id: true, name: true, avatar: true } }, blog: { select: { id: true, title: true } } }
+    include: { user: { select: { id: true, name: true, avatar: true } }, blog: { select: { id: true, title: true, slug: true } } }
   });
 
   res.status(200).json({ success: true, message: `Comment ${isApproved ? 'approved' : 'rejected'} successfully`, data: { comment } });
