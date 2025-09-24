@@ -9,7 +9,7 @@ import { ArrowRight, Users, BookOpen, Heart, TrendingUp, Sparkles } from 'lucide
 import { blogService } from '../services/blogService';
 import { Blog } from '../types';
 import Loading from '../components/Loading';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 
 const Home: React.FC = () => {
   const [featuredBlogs, setFeaturedBlogs] = useState<Blog[]>([]);
