@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Search, PenTool, User, Settings, LogOut, Shield, Heart, Bookmark } from 'lucide-react';
-import { useAuth } from '../App';
+import { useAuth } from '../hooks/useAuth';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -160,12 +160,12 @@ const Navbar: React.FC = () => {
                       )}
                       
                       <Link
-                        to="/profile"
+                        to={`/users/${user.id}`}
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Settings className="mr-3 h-4 w-4" />
-                        Settings
+                        Profile
                       </Link>
                       
                       <button
