@@ -53,7 +53,7 @@ export const useProvideAuth = () => {
     }, [refreshAuth]);
 
     const login = async (credential: string) => {
-        const response = await apiClient.post('/auth/login', { credential });
+        const response = await apiClient.post('/auth/google', { credential });
         const { token, user } = response.data.data;
         localStorage.setItem('token', token);
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
