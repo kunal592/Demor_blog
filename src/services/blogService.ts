@@ -3,7 +3,7 @@ import { Blog, BlogFormData, BlogFilters, ApiResponse, PaginationData, UserInter
 
 class BlogService {
   async getBlogs(filters: BlogFilters = {}) {
-    const res = await apiClient.get<ApiResponse<{ blogs: Blog[]; pagination: PaginationData }>>('/blogs', filters);
+    const res = await apiClient.get<ApiResponse<{ blogs: Blog[]; pagination: PaginationData }>>('/blogs', { params: filters });
     if (res.data.success && res.data.data) return res.data.data;
     throw new Error(res.data.message || 'Failed to fetch blogs');
   }
@@ -44,7 +44,7 @@ class BlogService {
   }
 
   async getUserBlogs(filters: { page?: number; limit?: number; status?: string } = {}) {
-    const res = await apiClient.get<ApiResponse<{ blogs: Blog[]; pagination: PaginationData }>>('/blogs/me/posts', filters);
+    const res = await apiClient.get<ApiResponse<{ blogs: Blog[]; pagination: PaginationData }>>('/blogs/me/posts', { params: filters });
     if (res.data.success && res.data.data) return res.data.data;
     throw new Error(res.data.message || 'Failed to fetch user blogs');
   }

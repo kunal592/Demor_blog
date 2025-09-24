@@ -10,7 +10,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "node src/scripts/seed.js"
+    "db:seed": "node src/blog/seed.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.1.3",

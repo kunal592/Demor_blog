@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { apiClient } from '../services/apiClient';
+import apiClient from '../services/apiClient';
+import { Button } from '../components/ui/Button';
+import { Textarea } from '../components/ui/Textarea';
+import { Card, CardContent } from '../components/ui/Card';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar';
+import { User, Blog, Comment } from '../types';
 
 const UserProfile = () => {
   const { userId } = useParams();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [blogs, setBlogs] = useState([]);
-  const [comments, setComments] = useState({});
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [comments, setComments] = useState<{[key: string]: Comment[]}>({});
   const [newComment, setNewComment] = useState('');
 
   useEffect(() => {
@@ -47,8 +52,15 @@ const UserProfile = () => {
     }
   };
 
-  const handleFetchComments = async (blogId) => {
-    if (comments[blogId]) return;
+  const handleFetchComments = async (blogId: string) => {
+    if (comments[blogId]) {
+      setComments((prevComments) => {
+        const newComments = { ...prevComments };
+        delete newComments[blogId];
+        return newComments;
+      });
+      return;
+    }
     try {
       const response = await apiClient.get(`/blogs/${blogId}/comments`);
       setComments((prevComments) => ({
@@ -60,7 +72,7 @@ const UserProfile = () => {
     }
   };
 
-  const handlePostComment = async (blogId) => {
+  const handlePostComment = async (blogId: string) => {
     if (!newComment.trim()) return;
     try {
       const response = await apiClient.post(`/blogs/${blogId}/comments`, {
@@ -77,51 +89,66 @@ const UserProfile = () => {
   };
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <div className="text-center p-10">Loading...</div>;
   }
 
   return (
-    <div>
-      <h1>{user.name}</h1>
-      <p>{user.email}</p>
-      {isFollowing ? (
-        <button onClick={handleUnfollow}>Unfollow</button>
-      ) : (
-        <button onClick={handleFollow}>Follow</button>
-      )}
-
-      <hr />
-
-      <h2>Blogs</h2>
-      {blogs.map((blog) => (
-        <div key={blog.id}>
-          <h3>{blog.title}</h3>
-          <p>{blog.content}</p>
-          <button onClick={() => handleFetchComments(blog.id)}>Load Comments</button>
-
-          {comments[blog.id] && (
-            <div>
-              <h4>Comments</h4>
-              {comments[blog.id].map((comment) => (
-                <div key={comment.id}>
-                  <p>
-                    <strong>{comment.user.name}</strong>: {comment.content}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div>
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Add a comment"
-            />
-            <button onClick={() => handlePostComment(blog.id)}>Post Comment</button>
+    <div className="container mx-auto p-4">
+      <Card className="mb-4">
+        <CardContent className="p-6 flex items-center">
+          <Avatar className="h-24 w-24 mr-6">
+            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarFallback>{user.name ? user.name[0] : 'U'}</AvatarFallback>
+          </Avatar>
+          <div className="flex-grow">
+            <h1 className="text-2xl font-bold">{user.name}</h1>
+            <p className="text-gray-500">{user.email}</p>
           </div>
-        </div>
-      ))}
+          {isFollowing ? (
+            <Button onClick={handleUnfollow}>Unfollow</Button>
+          ) : (
+            <Button onClick={handleFollow}>Follow</Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <h2 className="text-xl font-semibold mb-4">Blogs by {user.name}</h2>
+      <div className="space-y-4">
+        {blogs.map((blog) => (
+          <Card key={blog.id}>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-bold mb-2">{blog.title}</h3>
+              <p className="text-gray-700 mb-4">{blog.content}</p>
+              <Button onClick={() => handleFetchComments(blog.id)}>
+                {comments[blog.id] ? 'Hide Comments' : 'Load Comments'}
+              </Button>
+
+              {comments[blog.id] && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="font-semibold">Comments</h4>
+                  {comments[blog.id].map((comment) => (
+                    <div key={comment.id} className="p-2 border-l-4">
+                      <p>
+                        <strong>{comment.user.name}</strong>: {comment.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-4 flex">
+                <Textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Add a comment"
+                  className="mr-2"
+                />
+                <Button onClick={() => handlePostComment(blog.id)}>Post</Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

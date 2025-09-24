@@ -1,48 +1,20 @@
-/**
- * Loading spinner component for async operations
- * Features: Centered loading animation with customizable size and text
- */
-
 import React from 'react';
 
 interface LoadingProps {
-  size?: 'sm' | 'md' | 'lg';
-  text?: string;
   fullScreen?: boolean;
 }
 
-const Loading: React.FC<LoadingProps> = ({ 
-  size = 'md', 
-  text = 'Loading...', 
-  fullScreen = false 
-}) => {
-  const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12'
-  };
-
-  const textSizeClasses = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg'
-  };
-
-  const containerClasses = fullScreen 
-    ? 'fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50'
-    : 'flex items-center justify-center py-12';
+const Loading: React.FC<LoadingProps> = ({ fullScreen }) => {
+  const wrapperClasses = fullScreen
+    ? 'fixed inset-0 flex items-center justify-center bg-white z-50'
+    : 'flex items-center justify-center p-8';
 
   return (
-    <div className={containerClasses}>
-      <div className="text-center">
-        <div className="inline-block">
-          <div className={`${sizeClasses[size]} animate-spin border-4 border-blue-600 border-t-transparent rounded-full`}></div>
-        </div>
-        {text && (
-          <p className={`mt-4 text-gray-600 ${textSizeClasses[size]}`}>
-            {text}
-          </p>
-        )}
+    <div className={wrapperClasses}>
+      <div className="flex items-center space-x-2">
+        <div className="h-4 w-4 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+        <div className="h-4 w-4 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+        <div className="h-4 w-4 bg-blue-600 rounded-full animate-bounce"></div>
       </div>
     </div>
   );
