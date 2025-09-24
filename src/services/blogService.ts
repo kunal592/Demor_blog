@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import apiClient from './apiClient';
 import { Blog, BlogFormData, BlogFilters, ApiResponse, PaginationData, UserInteractions } from '../types';
 
 class BlogService {
