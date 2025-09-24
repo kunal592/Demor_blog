@@ -91,7 +91,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 404 Handler
+// Global Error Handler
+app.use(errorHandler);
+
+// 404 Handler - Must be last
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
@@ -99,8 +102,6 @@ app.use('*', (req, res) => {
   });
 });
 
-// Global Error Handler
-app.use(errorHandler);
 
 // Graceful Shutdown
 process.on('SIGTERM', () => {
