@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PenTool, Heart, Bookmark, Eye, TrendingUp, Plus, Edit3, BarChart3 } from 'lucide-react';
+import { PenTool, Heart, Bookmark, Eye, Plus, Edit3, BarChart3 } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { DashboardData, ApiResponse } from '../types';
 import Loading from '../components/Loading';
@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
     {
       icon: Heart,
       label: 'Liked Blogs',
-      value: stats.totalLikes,
+      value: stats.totalViews,
       color: 'bg-red-500',
       bgColor: 'bg-red-50',
       textColor: 'text-red-700'

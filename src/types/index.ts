@@ -93,6 +93,8 @@ export interface Comment {
 // =====================
 
 export interface UserStats {
+  totalBookmarks: any;
+  totalBlogs: any;
   blogsPublished: number;
   totalViews: number;
   likesReceived: number;
