@@ -11,16 +11,26 @@ export interface User {
 export interface Blog {
     id: string;
     title: string;
+    slug: string;
     content: string;
+    excerpt: string;
+    summary?: string;
     coverImage: string;
     isPublished: boolean;
     isFeatured: boolean;
     viewCount: number;
+    readTime: number;
+    tags: string[];
     createdAt: string;
     author: User;
     _count: {
         likes: number;
     };
+}
+
+export interface UserInteractions {
+    liked: boolean;
+    bookmarked: boolean;
 }
 
 export interface Comment {

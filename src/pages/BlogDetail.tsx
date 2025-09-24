@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 import { blogService } from '../services/blogService';
 import { Blog, UserInteractions } from '../types'
 import Loading from '../components/Loading';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 
 const BlogDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -245,7 +245,7 @@ const BlogDetail: React.FC = () => {
           {/* Tags */}
           {blog.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
-              {blog.tags.map((tag) => (
+              {blog.tags.map((tag: string) => (
                 <Link
                   key={tag}
                   to={`/blogs?tag=${tag}`}
