@@ -14,6 +14,12 @@ class BlogService {
     throw new Error(res.data.message || 'Blog not found');
   }
 
+  async getBlogById(id: string) {
+    const res = await apiClient.get<ApiResponse<{ blog: Blog }>>(`/blogs/${id}`);
+    if (res.data.success && res.data.data) return res.data.data;
+    throw new Error(res.data.message || 'Blog not found');
+  }
+
   async createBlog(blogData: BlogFormData) {
     const res = await apiClient.post<ApiResponse<{ blog: Blog }>>('/blogs', blogData);
     if (res.data.success && res.data.data) return res.data.data.blog;

@@ -1,4 +1,3 @@
-
 export interface User {
     id: string;
     email: string;
@@ -79,4 +78,23 @@ export interface BlogFormData {
     tags: string[];
     isPublished: boolean;
     isFeatured: boolean;
+}
+
+export interface BlogFilters {
+    limit?: number;
+    page?: number;
+    sortBy?: string;
+    order?: 'asc' | 'desc';
+    isFeatured?: boolean;
+    author?: string;
+    status?: 'published' | 'draft';
+}
+
+export interface PaginationData {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
 }

@@ -82,10 +82,10 @@ const UserProfile = () => {
     try {
       if (originalFollowingState) {
         await apiClient.delete(`/users/${userId}/unfollow`);
-        toast.success(`Unfollowed ${user?.name}`);
+        toast.success(`Unfollowed ${user?.name || 'user'}`);
       } else {
         await apiClient.post(`/users/${userId}/follow`);
-        toast.success(`Followed ${user?.name}`);
+        toast.success(`Followed ${user?.name || 'user'}`);
       }
     } catch (error) {
       toast.error('Failed to update follow status.');
@@ -160,7 +160,7 @@ const UserProfile = () => {
       <Card className="mb-4">
         <CardContent className="p-6 flex items-center">
           <Avatar className="h-24 w-24 mr-6">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage src={user.avatar || ''} alt={user.name || 'User'} />
             <AvatarFallback>{user.name ? user.name[0] : 'U'}</AvatarFallback>
           </Avatar>
           <div className="flex-grow">
