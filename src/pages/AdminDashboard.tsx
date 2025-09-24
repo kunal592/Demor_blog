@@ -20,7 +20,7 @@ import {
   Trash2,
   Search
 } from 'lucide-react';
-import { apiClient } from '../services/apiClient';
+import apiClient  from '../services/apiClient';
 import { AdminStats, User, Blog, ApiResponse, Comment } from '../types';
 import Loading from '../components/Loading';
 import toast from 'react-hot-toast';

@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Eye, Calendar, User, ArrowLeft } from 'lucide-react';
-import { apiClient } from '../services/apiClient';
+import apiClient  from '../services/apiClient';
 import { Blog, ApiResponse, PaginationData } from '../types';
 import Loading from '../components/Loading';
 

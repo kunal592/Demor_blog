@@ -9,10 +9,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/': {
-        target: 'http://localhost:3000',
+      '/api': {
+        target: 'http://localhost:5003',  // ✅ match backend port
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: (path) => path.replace(/^\/api/, ''), // keeps API paths clean
       },
     },
   },
