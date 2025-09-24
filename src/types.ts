@@ -1,28 +1,33 @@
+
 export interface User {
     id: string;
-    name: string;
     email: string;
-    avatar: string;
+    name: string | null;
+    avatar: string | null;
+    bio: string | null;
     role: 'USER' | 'ADMIN';
     isActive: boolean;
     createdAt: string;
+    followers: { followerId: string, followingId: string }[];
+    following: { followerId: string, followingId: string }[];
 }
 
 export interface Blog {
     id: string;
-    title: string;
     slug: string;
+    title: string;
     content: string;
     excerpt: string;
     summary?: string;
     coverImage: string;
+    tags: string[];
     isPublished: boolean;
     isFeatured: boolean;
+    author: User;
     viewCount: number;
     readTime: number;
-    tags: string[];
     createdAt: string;
-    author: User;
+    updatedAt: string;
     _count: {
         likes: number;
     };
@@ -36,9 +41,14 @@ export interface UserInteractions {
 export interface Comment {
     id: string;
     content: string;
-    createdAt: string;
     user: User;
-    blog: Blog;
+    createdAt: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  loading: boolean;
 }
 
 export interface AdminStats {

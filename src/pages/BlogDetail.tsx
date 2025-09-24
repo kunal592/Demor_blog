@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Heart, Bookmark, Share2, Eye, Calendar, User, Tag, ArrowLeft, Edit3 } from 'lucide-react';
+import { Heart, Bookmark, Share2, Eye, Calendar, Tag, ArrowLeft, Edit3 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -182,7 +182,7 @@ const BlogDetail: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <img
                   src={blog.author.avatar || `https://ui-avatars.com/api/?name=${blog.author.name}&background=3B82F6&color=ffffff`}
-                  alt={blog.author.name}
+                  alt={blog.author.name || 'author'}
                   className="w-12 h-12 rounded-full"
                 />
                 <div>
