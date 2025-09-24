@@ -30,8 +30,9 @@ import BookmarkedBlogs from './pages/BookmarkedBlogs';
 import ContactUs from './pages/ContactUs';
 
 // Auth hook, context, and types
-import { useProvideAuth, useAuth } from './hooks/useAuth';
-import { AuthContext } from './contexts/AuthContext';
+import { useProvideAuth } from './hooks/useAuth';
+import { AuthContext, useAuth } from './contexts/AuthContext';
+
 
 // ------------------------------------------------
 // 2. ProtectedRoute component

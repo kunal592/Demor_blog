@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Chrome, Shield, Users, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuth } from '../App';
+import { useAuth } from '../contexts/AuthContext';
 
 // ------------------------------------------------
 // Google Identity Services typing (for TS support)
