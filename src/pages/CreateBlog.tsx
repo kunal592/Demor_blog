@@ -33,14 +33,13 @@ const CreateBlog: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleInputChange = (field: keyof BlogFormData, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev: BlogFormData) => ({
       ...prev,
       [field]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev: Record<string, string>) => ({
         ...prev,
         [field]: ''
       }));
@@ -50,7 +49,7 @@ const CreateBlog: React.FC = () => {
   const addTag = () => {
     const tag = currentTag.trim().toLowerCase();
     if (tag && !formData.tags.includes(tag)) {
-      setFormData(prev => ({
+      setFormData((prev: BlogFormData) => ({
         ...prev,
         tags: [...prev.tags, tag]
       }));
@@ -59,9 +58,9 @@ const CreateBlog: React.FC = () => {
   };
 
   const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
+    setFormData((prev: BlogFormData) => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      tags: prev.tags.filter((tag: string) => tag !== tagToRemove)
     }));
   };
 
@@ -102,7 +101,6 @@ const CreateBlog: React.FC = () => {
     
     handleInputChange('content', newContentFull);
     
-    // Set cursor position after insertion
     setTimeout(() => {
       textarea.focus();
       const newCursorPos = start + newContent.length;
@@ -336,7 +334,7 @@ const CreateBlog: React.FC = () => {
                   Tags
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.tags.map((tag) => (
+                  {formData.tags.map((tag: string) => (
                     <span
                       key={tag}
                       className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"

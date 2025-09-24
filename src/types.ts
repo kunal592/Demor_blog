@@ -54,7 +54,9 @@ export interface ApiResponse<T> {
 export interface BlogFormData {
     title: string;
     content: string;
-    coverImage: File | null;
+    excerpt: string;
+    coverImage: string;
     tags: string[];
     isPublished: boolean;
+    isFeatured: boolean;
 }
