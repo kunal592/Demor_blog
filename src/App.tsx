@@ -6,7 +6,7 @@
  * - Integrates Navbar/Footer/Toaster
  */
 
-import React, { createContext } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
@@ -29,23 +29,9 @@ import LikedBlogs from './pages/LikedBlogs';
 import BookmarkedBlogs from './pages/BookmarkedBlogs';
 import ContactUs from './pages/ContactUs';
 
-// Auth hook and types
+// Auth hook, context, and types
 import { useProvideAuth, useAuth } from './hooks/useAuth';
-import { User } from './types';
-
-// ------------------------------------------------
-// 1. Define AuthContext shape (what context provides)
-// ------------------------------------------------
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (credential: string) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshAuth: () => Promise<void>;
-}
-
-// Context initialized as undefined so we can enforce hook usage inside provider
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from './contexts/AuthContext';
 
 // ------------------------------------------------
 // 2. ProtectedRoute component
@@ -57,9 +43,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean 
 }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return <Loading />; // show spinner while checking auth
-  if (!user) return <Navigate to="/login" replace />; // redirect if not logged in
-  if (adminOnly && user.role !== 'ADMIN') return <Navigate to="/dashboard" replace />; // block non-admins
+  if (loading) return <Loading fullScreen />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (adminOnly && user.role !== 'ADMIN') return <Navigate to="/dashboard" replace />;
 
   return <>{children}</>; // allow access
 };
@@ -71,7 +57,7 @@ function App() {
   const auth = useProvideAuth();
 
   // While checking auth → show loading spinner
-  if (auth.loading) return <Loading />;
+  if (auth.loading) return <Loading fullScreen />;
 
   return (
     <AuthContext.Provider value={auth}>
@@ -86,6 +72,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/blogs" element={<BlogList />} />
               <Route path="/blog/:slug" element={<BlogDetail />} />
+              <Route path="/users/:userId" element={<UserProfile />} />
               <Route
                 path="/login"
                 element={auth.user ? <Navigate to="/dashboard" replace /> : <Login />}
@@ -96,7 +83,6 @@ function App() {
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/create-blog" element={<ProtectedRoute><CreateBlog /></ProtectedRoute>} />
               <Route path="/edit-blog/:id" element={<ProtectedRoute><EditBlog /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               <Route path="/liked-blogs" element={<ProtectedRoute><LikedBlogs /></ProtectedRoute>} />
               <Route path="/bookmarked-blogs" element={<ProtectedRoute><BookmarkedBlogs /></ProtectedRoute>} />
 

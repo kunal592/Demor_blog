@@ -9,7 +9,7 @@ import { PenTool, Heart, Bookmark, Eye, Plus, Edit3, BarChart3 } from 'lucide-re
 import apiClient from '../services/apiClient';
 import { DashboardData, ApiResponse } from '../types';
 import Loading from '../components/Loading';
-import { useAuth } from '../App';
+import { useAuth } from '../hooks/useAuth';
 
 const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
     {
       icon: Heart,
       label: 'Liked Blogs',
-      value: stats.totalViews,
+      value: stats.totalLikes,
       color: 'bg-red-500',
       bgColor: 'bg-red-50',
       textColor: 'text-red-700'

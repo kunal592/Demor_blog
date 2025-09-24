@@ -11,9 +11,9 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import toast from 'react-hot-toast';
 import { blogService } from '../services/blogService';
-import { Blog, UserInteractions } from '../types';
+import { Blog, UserInteractions } from '../types'
 import Loading from '../components/Loading';
-import { useAuth } from '../App';
+import { useAuth } from '../hooks/useAuth';
 
 const BlogDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();

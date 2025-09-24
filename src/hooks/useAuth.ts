@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { authService } from '../services/authService';
 import { User } from '../types';
-import { AuthContext } from '../App'; // Assuming AuthContext is exported from App.tsx
+import { AuthContext } from '../contexts/AuthContext';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

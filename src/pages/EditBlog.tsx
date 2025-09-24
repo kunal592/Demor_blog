@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 import { blogService } from '../services/blogService';
 import { BlogFormData, Blog } from '../types';
 import Loading from '../components/Loading';
-import { useAuth } from '../App';
+import { useAuth } from '../hooks/useAuth';
 
 const EditBlog: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,7 +48,7 @@ const EditBlog: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await blogService.getBlogBySlug(id);
+      const response = await blogService.getBlogById(id);
       const blogData = response.blog;
       
       // Check if user can edit this blog
