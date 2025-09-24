@@ -7,9 +7,21 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PenTool, Heart, Bookmark, Eye, Plus, Edit3, BarChart3 } from 'lucide-react';
 import apiClient from '../services/apiClient';
-import { DashboardData, ApiResponse } from '../types';
+import { Blog, ApiResponse } from '../types';
 import Loading from '../components/Loading';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
+
+interface DashboardData {
+  stats: {
+    totalBlogs: number;
+    totalViews: number;
+    totalLikes: number;
+    totalBookmarks: number;
+  };
+  recentBlogs: Blog[];
+  recentLikes: Blog[];
+  recentBookmarks: Blog[];
+}
 
 const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -235,7 +247,7 @@ const Dashboard: React.FC = () => {
                       <div key={blog.id} className="flex items-start space-x-3">
                         <img
                           src={blog.author.avatar || `https://ui-avatars.com/api/?name=${blog.author.name}&background=EF4444&color=ffffff`}
-                          alt={blog.author.name}
+                          alt={blog.author.name || 'author'}
                           className="w-8 h-8 rounded-full"
                         />
                         <div className="flex-1 min-w-0">
@@ -279,7 +291,7 @@ const Dashboard: React.FC = () => {
                       <div key={blog.id} className="flex items-start space-x-3">
                         <img
                           src={blog.author.avatar || `https://ui-avatars.com/api/?name=${blog.author.name}&background=8B5CF6&color=ffffff`}
-                          alt={blog.author.name}
+                          alt={blog.author.name || 'author'}
                           className="w-8 h-8 rounded-full"
                         />
                         <div className="flex-1 min-w-0">
