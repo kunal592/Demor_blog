@@ -7,6 +7,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '../config/database.js';
 import { authenticate, requireBlogAuthor } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { handleValidationErrors, blogQueryValidators, blogIdValidator, blogSlugValidator, createBlogValidators, updateBlogValidators, userBlogQueryValidators } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -60,6 +61,8 @@ router.get(
 // --- Get blogs ---
 router.get(
   '/',
+  blogQueryValidators,
+  handleValidationErrors,
   asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, search, tag, author, featured, sortBy = 'createdAt', sortOrder = 'desc' } =
       req.query;
@@ -118,6 +121,8 @@ router.get(
 // --- Get blog by slug ---
 router.get(
   '/:slug',
+  blogSlugValidator,
+  handleValidationErrors,
   asyncHandler(async (req, res) => {
     const { slug } = req.params;
     const blog = await prisma.blog.findUnique({
@@ -158,9 +163,10 @@ router.get(
 router.post(
   '/',
   authenticate,
+  createBlogValidators,
+  handleValidationErrors,
   asyncHandler(async (req, res) => {
     const { title, content, excerpt, coverImage, tags = [], isPublished = false, isFeatured = false } = req.body;
-    if (!title || !content) return res.status(400).json({ success: false, message: 'Title & content required' });
 
     let slug = generateSlug(title);
     if (await prisma.blog.findUnique({ where: { slug } })) slug += `-${Date.now()}`;
@@ -196,6 +202,8 @@ router.put(
   '/:id',
   authenticate,
   requireBlogAuthor,
+  updateBlogValidators,
+  handleValidationErrors,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { title, content, excerpt, coverImage, tags, isPublished, isFeatured } = req.body;
@@ -235,6 +243,8 @@ router.delete(
   '/:id',
   authenticate,
   requireBlogAuthor,
+  blogIdValidator,
+  handleValidationErrors,
   asyncHandler(async (req, res) => {
     await prisma.blog.delete({ where: { id: req.params.id } });
     res.json({ success: true, message: 'Blog deleted successfully' });
@@ -245,6 +255,8 @@ router.delete(
 router.post(
   '/:id/like',
   authenticate,
+  blogIdValidator,
+  handleValidationErrors,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const blog = await prisma.blog.findUnique({ where: { id } });
@@ -276,6 +288,8 @@ router.post(
 router.post(
   '/:id/bookmark',
   authenticate,
+  blogIdValidator,
+  handleValidationErrors,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const blog = await prisma.blog.findUnique({ where: { id } });
@@ -299,6 +313,8 @@ router.post(
 router.get(
   '/me/posts',
   authenticate,
+  userBlogQueryValidators,
+  handleValidationErrors,
   asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, status } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);

@@ -8,7 +8,8 @@
     "start:server": "node server/src/server.js",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed": "node server/src/blog/seed.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

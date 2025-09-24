@@ -5,10 +5,12 @@ import { Button } from '../components/ui/Button';
 import { Textarea } from '../components/ui/Textarea';
 import { Card, CardContent } from '../components/ui/Card';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar';
+import { useAuth } from '../hooks/useAuth';
 import { User, Blog, Comment } from '../types';
 
 const UserProfile = () => {
   const { userId } = useParams();
+  const { user: currentUser } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -25,18 +27,20 @@ const UserProfile = () => {
         ]);
         setUser(userResponse.data.data.user);
         setBlogs(blogsResponse.data.data.blogs);
+        setIsFollowing(userResponse.data.data.user.followers.some(follower => follower.followerId === currentUser?.id))
       } catch (error) {
         console.error('Error fetching user and blogs:', error);
       }
     };
     fetchUserAndBlogs();
-  }, [userId]);
+  }, [userId, currentUser?.id]);
 
   const handleFollow = async () => {
     if (!userId) return;
     try {
       await apiClient.post(`/users/${userId}/follow`);
       setIsFollowing(true);
+      setUser(prevUser => prevUser ? { ...prevUser, followers: [...prevUser.followers, { followerId: currentUser?.id, followingId: userId }] } : null);
     } catch (error) {
       console.error('Error following user:', error);
     }
@@ -47,6 +51,7 @@ const UserProfile = () => {
     try {
       await apiClient.delete(`/users/${userId}/unfollow`);
       setIsFollowing(false);
+      setUser(prevUser => prevUser ? { ...prevUser, followers: prevUser.followers.filter(follower => follower.followerId !== currentUser?.id) } : null);
     } catch (error) {
       console.error('Error unfollowing user:', error);
     }
@@ -103,11 +108,17 @@ const UserProfile = () => {
           <div className="flex-grow">
             <h1 className="text-2xl font-bold">{user.name}</h1>
             <p className="text-gray-500">{user.email}</p>
+            <div className="flex space-x-4 mt-2">
+              <p><strong>{user.followers.length}</strong> Followers</p>
+              <p><strong>{user.following.length}</strong> Following</p>
+            </div>
           </div>
-          {isFollowing ? (
-            <Button onClick={handleUnfollow}>Unfollow</Button>
-          ) : (
-            <Button onClick={handleFollow}>Follow</Button>
+          {currentUser?.id !== userId && (
+            isFollowing ? (
+              <Button onClick={handleUnfollow}>Unfollow</Button>
+            ) : (
+              <Button onClick={handleFollow}>Follow</Button>
+            )
           )}
         </CardContent>
       </Card>

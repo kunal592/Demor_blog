@@ -55,6 +55,8 @@ app.use(cookieParser());
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
 // Session and Passport Middleware
+// In a production environment, you should use a more robust session store, such as connect-redis or connect-mongo.
+// See https://expressjs.com/en/resources/middleware/session.html for more details.
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'your_default_secret',

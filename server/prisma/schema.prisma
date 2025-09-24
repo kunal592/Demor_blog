@@ -1,8 +1,9 @@
-// Prisma schema for blog application with comprehensive user and blog management
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "darwin-arm64"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -10,186 +11,130 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model with Google OAuth integration and role-based access
+
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  name          String
-  avatar        String?
-  googleId      String?  @unique
-  role          Role     @default(USER)
-  refreshToken  String?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // User relationships
-  blogs         Blog[]
-  likes         Like[]
-  bookmarks     Bookmark[]
-  comments      Comment[]
-  following     Follow[] @relation("UserFollowing")
-  followers     Follow[] @relation("UserFollowers")
-  commentLikes  CommentLike[]
-
-  notifications        Notification[] @relation("UserNotifications")
-  actedInNotifications Notification[] @relation("ActorNotifications")
+  id          String    @id @default(uuid())
+  email       String    @unique
+  name        String?
+  avatar      String?
+  bio         String?
+  role        Role      @default(USER)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  blogs       Blog[]
+  likes       Like[]
+  bookmarks   Bookmark[]
+  comments    Comment[]
+  sessions    Session[]
+  sentNotifications Notification[] @relation("sentNotifications")
+  receivedNotifications Notification[] @relation("receivedNotifications")
+  following   Follows[] @relation("following")
+  followers   Follows[] @relation("followers")
 
   @@map("users")
 }
 
-// Blog model with markdown content and AI summarization
-model Blog {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  content     String   // Markdown content
-  excerpt     String?  // Manual excerpt
-  summary     String?  // AI-generated summary
-  coverImage  String?
-  isPublished Boolean  @default(false)
-  isFeatured  Boolean  @default(false)
-  readTime    Int?     // Estimated read time in minutes
-  tags        String[] // Array of tags
-  viewCount   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Blog relationships
-  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId      String
-  likes         Like[]
-  bookmarks     Bookmark[]
-  comments      Comment[]
-  notifications Notification[]
-
-  @@map("blogs")
-}
-
-// Like model for blog interactions
-model Like {
-  id     String @id @default(cuid())
-  userId String
-  blogId String
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, blogId]) // Prevent duplicate likes
-  @@map("likes")
-}
-
-// Bookmark model for user's saved blogs
-model Bookmark {
-  id        String   @id @default(cuid())
-  userId    String
-  blogId    String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, blogId]) // Prevent duplicate bookmarks
-  @@map("bookmarks")
-}
-
-// Comment model for blog discussions
-model Comment {
-  id         String   @id @default(cuid())
-  content    String
-  isApproved Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  // Comment relationships
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  blog      Blog          @relation(fields: [blogId], references: [id], onDelete: Cascade)
-  blogId    String
-  likes     CommentLike[]
-  // Self-referencing for nested comments
-  parent    Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  parentId  String?
-  replies   Comment[]     @relation("CommentReplies")
-
-  notifications Notification[]
-
-  @@map("comments")
-}
-
-// Like model for comment interactions
-model CommentLike {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  commentId String
-
-  @@unique([userId, commentId])
-  @@map("comment_likes")
-}
-
-
-// Follow model for user relationships
-model Follow {
-  followerId  String
+model Follows {
+  followerId String
   followingId String
+  follower    User   @relation("following", fields: [followerId], references: [id])
+  following   User   @relation("followers", fields: [followingId], references: [id])
   createdAt   DateTime @default(now())
-
-  follower    User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
-  following   User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
   @@map("follows")
 }
 
-// ContactRequest model for user inquiries
-model ContactRequest {
-  id         String   @id @default(cuid())
-  name       String
-  email      String
-  message    String
-  isResolved Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
 
-  @@map("contact_requests")
+  @@map("sessions")
+}
+
+model Blog {
+  id           String     @id @default(uuid())
+  title        String
+  slug         String     @unique
+  content      String
+  excerpt      String?
+  summary      String?
+  coverImage   String?
+  tags         String[]
+  isPublished  Boolean    @default(false)
+  isFeatured   Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  author       User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId     String
+  viewCount    Int        @default(0)
+  readTime     Int        @default(0)
+  likes        Like[]
+  bookmarks    Bookmark[]
+  comments     Comment[]
+
+  @@map("blogs")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, blogId])
+  @@map("likes")
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, blogId])
+  @@map("bookmarks")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  blogId    String
+  parentId  String?
+  parent    Comment? @relation("replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("replies")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("comments")
 }
 
 model Notification {
-  id        String           @id @default(cuid())
-  type      NotificationType
-  read      Boolean          @default(false)
-  createdAt DateTime         @default(now())
-
-  // The user who receives the notification
-  user      User             @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-
-  // The user who triggered the notification
-  actor     User             @relation("ActorNotifications", fields: [actorId], references: [id], onDelete: Cascade)
-  actorId   String
-
-  blog      Blog?            @relation(fields: [blogId], references: [id], onDelete: Cascade)
-  blogId    String?
-
-  comment   Comment?         @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  commentId String?
+  id          String   @id @default(uuid())
+  type        String // e.g., 'like', 'comment', 'follow'
+  sender      User     @relation("sentNotifications", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId    String
+  recipient   User     @relation("receivedNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId String
+  blogId      String?  // Optional, for like/comment notifications
+  commentId   String?  // Optional, for comment notifications
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
   @@map("notifications")
 }
 
-enum NotificationType {
-  NEW_COMMENT
-  COMMENT_LIKE
-  COMMENT_REPLY
-  NEW_FOLLOWER
-}
-
-
-// User roles enum
 enum Role {
   USER
   ADMIN
