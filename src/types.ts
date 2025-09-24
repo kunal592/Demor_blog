@@ -50,3 +50,11 @@ export interface ApiResponse<T> {
     message: string;
     data: T | null;
 }
+
+export interface BlogFormData {
+    title: string;
+    content: string;
+    coverImage: File | null;
+    tags: string[];
+    isPublished: boolean;
+}

@@ -5,7 +5,7 @@
  * - Wraps API client with typed responses
  */
 
-import { apiClient } from './apiClient';
+import  apiClient  from './apiClient';
 import { User, ApiResponse } from '../types';
 
 class AuthService {
