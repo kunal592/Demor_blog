@@ -29,9 +29,8 @@ import LikedBlogs from './pages/LikedBlogs';
 import BookmarkedBlogs from './pages/BookmarkedBlogs';
 import ContactUs from './pages/ContactUs';
 
-// Auth hook, context, and types
-import { useProvideAuth } from './hooks/useAuth';
-import { AuthContext, useAuth } from './contexts/AuthContext';
+// Auth context and hook
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 
 // ------------------------------------------------
@@ -55,60 +54,67 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean 
 // 3. Main App Component
 // ------------------------------------------------
 function App() {
-  const auth = useProvideAuth();
-
-  // While checking auth → show loading spinner
-  if (auth.loading) return <Loading fullScreen />;
 
   return (
-    <AuthContext.Provider value={auth}>
-      <Router>
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-          {/* Navbar always visible */}
-          <Navbar />
+    <AuthProvider>
+        <Router>
+            <AppContent />
+        </Router>
+    </AuthProvider>
+  );
+}
 
-          <main className="flex-grow">
-            <Routes>
-              {/* ---------------- Public Routes ---------------- */}
-              <Route path="/" element={<Home />} />
-              <Route path="/blogs" element={<BlogList />} />
-              <Route path="/blog/:slug" element={<BlogDetail />} />
-              <Route path="/users/:userId" element={<UserProfile />} />
-              <Route
-                path="/login"
-                element={auth.user ? <Navigate to="/dashboard" replace /> : <Login />}
-              />
-              <Route path="/contact" element={<ContactUs />} />
+// We need a component to use the useAuth hook
+const AppContent = () => {
+  const { user, loading } = useAuth();
 
-              {/* ---------------- Protected Routes ---------------- */}
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/create-blog" element={<ProtectedRoute><CreateBlog /></ProtectedRoute>} />
-              <Route path="/edit-blog/:id" element={<ProtectedRoute><EditBlog /></ProtectedRoute>} />
-              <Route path="/liked-blogs" element={<ProtectedRoute><LikedBlogs /></ProtectedRoute>} />
-              <Route path="/bookmarked-blogs" element={<ProtectedRoute><BookmarkedBlogs /></ProtectedRoute>} />
+  if (loading) return <Loading fullScreen />;
 
-              {/* ---------------- Admin Routes ---------------- */}
-              <Route path="/admin/*" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Navbar always visible */}
+      <Navbar />
 
-              {/* ---------------- Fallback (404) ---------------- */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
+      <main className="flex-grow">
+        <Routes>
+          {/* ---------------- Public Routes ---------------- */}
+          <Route path="/" element={<Home />} />
+          <Route path="/blogs" element={<BlogList />} />
+          <Route path="/blog/:slug" element={<BlogDetail />} />
+          <Route path="/users/:userId" element={<UserProfile />} />
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/dashboard" replace /> : <Login />}
+          />
+          <Route path="/contact" element={<ContactUs />} />
 
-          {/* Footer always visible */}
-          <Footer />
-        </div>
+          {/* ---------------- Protected Routes ---------------- */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/create-blog" element={<ProtectedRoute><CreateBlog /></ProtectedRoute>} />
+          <Route path="/edit-blog/:id" element={<ProtectedRoute><EditBlog /></ProtectedRoute>} />
+          <Route path="/liked-blogs" element={<ProtectedRoute><LikedBlogs /></ProtectedRoute>} />
+          <Route path="/bookmarked-blogs" element={<ProtectedRoute><BookmarkedBlogs /></ProtectedRoute>} />
 
-        {/* Toast notifications (global) */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: { background: '#333', color: '#fff' },
-          }}
-        />
-      </Router>
-    </AuthContext.Provider>
+          {/* ---------------- Admin Routes ---------------- */}
+          <Route path="/admin/*" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
+
+          {/* ---------------- Fallback (404) ---------------- */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+
+      {/* Footer always visible */}
+      <Footer />
+
+      {/* Toast notifications (global) */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: { background: '#333', color: '#fff' },
+        }}
+      />
+    </div>
   );
 }
 

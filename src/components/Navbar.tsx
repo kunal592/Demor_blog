@@ -90,13 +90,13 @@ const Navbar: React.FC = () => {
                   {user.avatar ? (
                     <img
                       src={user.avatar}
-                      alt={user.name}
+                      alt={user.name || 'user'}
                       className="h-8 w-8 rounded-full object-cover"
                     />
                   ) : (
                     <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
                       <span className="text-white text-sm font-medium">
-                        {user.name.charAt(0).toUpperCase()}
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                       </span>
                     </div>
                   )}

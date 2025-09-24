@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 import { blogService } from '../services/blogService';
 import { BlogFormData, Blog } from '../types';
 import Loading from '../components/Loading';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 
 const EditBlog: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,43 +38,41 @@ const EditBlog: React.FC = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (id) {
-      loadBlog();
-    }
-  }, [id]);
-
-  const loadBlog = async () => {
     if (!id) return;
 
-    try {
-      setLoading(true);
-      const response = await blogService.getBlogById(id);
-      const blogData = response.blog;
-      
-      // Check if user can edit this blog
-      if (!user || (user.id !== blogData.author.id && user.role !== 'ADMIN')) {
-        toast.error('You are not authorized to edit this blog');
-        navigate('/dashboard');
-        return;
-      }
+    const loadBlog = async () => {
+      try {
+        setLoading(true);
+        const response = await blogService.getBlogById(id);
+        const blogData = response.blog;
+        
+        // Check if user can edit this blog
+        if (!user || (user.id !== blogData.author.id && user.role !== 'ADMIN')) {
+          toast.error('You are not authorized to edit this blog');
+          navigate('/dashboard');
+          return;
+        }
 
-      setBlog(blogData);
-      setFormData({
-        title: blogData.title,
-        content: blogData.content,
-        excerpt: blogData.excerpt || '',
-        coverImage: blogData.coverImage || '',
-        tags: blogData.tags,
-        isPublished: blogData.isPublished,
-        isFeatured: blogData.isFeatured
-      });
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to load blog');
-      navigate('/dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
+        setBlog(blogData);
+        setFormData({
+          title: blogData.title,
+          content: blogData.content,
+          excerpt: blogData.excerpt || '',
+          coverImage: blogData.coverImage || '',
+          tags: blogData.tags,
+          isPublished: blogData.isPublished,
+          isFeatured: blogData.isFeatured
+        });
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to load blog');
+        navigate('/dashboard');
+      } finally {
+        setLoading(.false);
+      }
+    };
+    
+    loadBlog();
+  }, [id, user, navigate]);
 
   const handleInputChange = (field: keyof BlogFormData, value: any) => {
     setFormData(prev => ({
@@ -334,7 +332,7 @@ const EditBlog: React.FC = () => {
                 {/* Preview */}
                 {showPreview && (
                   <div className="border-l border-gray-200">
-                    <div className="p-4 h-96 overflow-y-auto prose prose-sm max-w-none">
+                    <div className.p-4 h-96 overflow-y-auto prose prose-sm max-w-none">
                       {formData.content ? (
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}

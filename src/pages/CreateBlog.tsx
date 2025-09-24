@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import { blogService } from '../services/blogService';
 import { BlogFormData } from '../types';
 import Loading from '../components/Loading';
+import { useAuth } from '../contexts/AuthContext';
 
 const CreateBlog: React.FC = () => {
   const [formData, setFormData] = useState<BlogFormData>({
@@ -31,6 +32,7 @@ const CreateBlog: React.FC = () => {
   
   const navigate = useNavigate();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { user } = useAuth();
 
   const handleInputChange = (field: keyof BlogFormData, value: any) => {
     setFormData((prev: BlogFormData) => ({
