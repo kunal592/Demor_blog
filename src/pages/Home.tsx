@@ -93,7 +93,7 @@ const Home = () => {
                     <div className="p-6">
                       <div className="flex items-center mb-3">
                         <img
-                          src={blog.author.avatar || ''}
+                          src={blog.author.avatar || `https://ui-avatars.com/api/?name=${blog.author.name}&background=3B82F6&color=ffffff`}
                           alt={blog.author.name || 'Author'}
                           className="w-8 h-8 rounded-full mr-3"
                         />
@@ -134,7 +134,7 @@ const Home = () => {
                   </div>
                   <div className="flex items-center mt-4">
                     <img
-                      src={blog.author.avatar || ''}
+                      src={blog.author.avatar || `https://ui-avatars.com/api/?name=${blog.author.name}&background=3B82F6&color=ffffff`}
                       alt={blog.author.name || 'Author'}
                       className="w-10 h-10 rounded-full mr-4"
                     />

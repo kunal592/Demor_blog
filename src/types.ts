@@ -88,6 +88,8 @@ export interface BlogFilters {
     isFeatured?: boolean;
     author?: string;
     status?: 'published' | 'draft';
+    search?: string;
+    tag?: string;
 }
 
 export interface PaginationData {

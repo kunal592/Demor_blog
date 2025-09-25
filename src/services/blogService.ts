@@ -1,5 +1,5 @@
 import apiClient from './apiClient';
-import { Blog, BlogFormData, BlogFilters, ApiResponse, PaginationData, UserInteractions } from '../types';
+import { Blog, BlogFormData, BlogFilters, ApiResponse, PaginationData, UserInteractions, Comment } from '../types';
 
 class BlogService {
   async getBlogs(filters: BlogFilters = {}) {
@@ -47,6 +47,18 @@ class BlogService {
     const res = await apiClient.post<ApiResponse<{ bookmarked: boolean }>>(`/blogs/${blogId}/bookmark`);
     if (res.data.success && res.data.data) return res.data.data;
     throw new Error(res.data.message || 'Failed to toggle bookmark');
+  }
+
+  async getComments(blogId: string) {
+    const res = await apiClient.get<ApiResponse<{ comments: Comment[] }>>(`/blogs/${blogId}/comments`);
+    if (res.data.success && res.data.data) return res.data.data;
+    throw new Error(res.data.message || 'Failed to fetch comments');
+  }
+
+  async addComment(blogId: string, content: string) {
+    const res = await apiClient.post<ApiResponse<{ comment: Comment }>>(`/blogs/${blogId}/comments`, { content });
+    if (res.data.success && res.data.data) return res.data.data;
+    throw new Error(res.data.message || 'Failed to add comment');
   }
 
   async getUserBlogs(filters: { page?: number; limit?: number; status?: string } = {}) {

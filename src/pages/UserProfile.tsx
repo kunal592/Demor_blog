@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import apiClient from '../services/apiClient';
 import { Button } from '../components/ui/Button';
 import { Textarea } from '../components/ui/Textarea';
 import { Card, CardContent } from '../components/ui/Card';
@@ -9,6 +8,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { User, Blog, Comment } from '../types';
 import toast from 'react-hot-toast';
 import Loading from '../components/Loading';
+import { blogService } from '../services/blogService';
+import { userService } from '../services/userService';
+import { handleApiError } from '../utils/errorHandler';
 
 const UserProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -25,31 +27,32 @@ const UserProfile = () => {
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [isCommentLoading, setIsCommentLoading] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchUserAndBlogs = async () => {
-      if (!userId) return;
-      setLoading(true);
-      try {
-        const [userResponse, blogsResponse] = await Promise.all([
-          apiClient.get(`/users/${userId}`),
-          apiClient.get(`/blogs?author=${userId}`),
-        ]);
-        setUser(userResponse.data.data.user);
-        setBlogs(blogsResponse.data.data.blogs);
-        setIsFollowing(
-          userResponse.data.data.user.followers.some(
-            (follower: any) => follower.followerId === currentUser?.id
-          )
-        );
-      } catch (error) {
-        toast.error('Failed to fetch user data.');
-        console.error('Error fetching user and blogs:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUserAndBlogs();
+  const fetchUserData = useCallback(async () => {
+    if (!userId) return;
+    setLoading(true);
+    try {
+      const [userResponse, blogsResponse] = await Promise.all([
+        userService.getUserById(userId),
+        blogService.getBlogs({ author: userId }),
+      ]);
+      setUser(userResponse.user);
+      setBlogs(blogsResponse.blogs);
+      setIsFollowing(
+        userResponse.user.followers.some(
+          (follower: any) => follower.followerId === currentUser?.id
+        )
+      );
+    } catch (error) {
+      const { userMessage } = handleApiError(error, 'fetching user profile');
+      toast.error(userMessage);
+    } finally {
+      setLoading(false);
+    }
   }, [userId, currentUser?.id]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   const handleFollowToggle = useCallback(async () => {
     if (!userId || !currentUser) {
@@ -58,45 +61,19 @@ const UserProfile = () => {
     }
     
     setIsFollowLoading(true);
-    const originalFollowingState = isFollowing;
-    const originalUser = user;
-
-    // Optimistic update
-    setIsFollowing(!originalFollowingState);
-    setUser(prevUser => {
-      if (!prevUser) return null;
-      const currentFollowers = prevUser.followers || [];
-      if (originalFollowingState) {
-        // Unfollow
-        return { 
-          ...prevUser, 
-          followers: currentFollowers.filter(f => f.followerId !== currentUser.id) 
-        };
-      } else {
-        // Follow
-        const newFollower = { followerId: currentUser.id, followingId: userId };
-        return { ...prevUser, followers: [...currentFollowers, newFollower as any] };
-      }
-    });
-
     try {
-      if (originalFollowingState) {
-        await apiClient.delete(`/users/${userId}/unfollow`);
-        toast.success(`Unfollowed ${user?.name || 'user'}`);
-      } else {
-        await apiClient.post(`/users/${userId}/follow`);
-        toast.success(`Followed ${user?.name || 'user'}`);
-      }
+      const response = await userService.toggleFollow(userId);
+      // Update state based on the actual response
+      setIsFollowing(response.isFollowing);
+      setUser(prevUser => prevUser ? { ...prevUser, followers: response.followers } : null);
+      toast.success(response.isFollowing ? `Followed ${user?.name}` : `Unfollowed ${user?.name}`);
     } catch (error) {
-      toast.error('Failed to update follow status.');
-      // Revert on error
-      setIsFollowing(originalFollowingState);
-      setUser(originalUser);
-      console.error('Error following/unfollowing user:', error);
+      const { userMessage } = handleApiError(error, 'updating follow status');
+      toast.error(userMessage);
     } finally {
       setIsFollowLoading(false);
     }
-  }, [userId, currentUser, isFollowing, user]);
+  }, [userId, currentUser, user?.name]);
 
   const handleToggleComments = useCallback(async (blogId: string) => {
     const newVisibleComments = new Set(visibleComments);
@@ -104,14 +81,13 @@ const UserProfile = () => {
       newVisibleComments.delete(blogId);
     } else {
       newVisibleComments.add(blogId);
-      // Fetch comments only if they haven't been fetched before
       if (!comments[blogId]) {
         try {
-          const response = await apiClient.get(`/blogs/${blogId}/comments`);
-          setComments(prev => ({ ...prev, [blogId]: response.data.data.comments }));
+          const response = await blogService.getComments(blogId);
+          setComments(prev => ({ ...prev, [blogId]: response.comments }));
         } catch (error) {
-          toast.error('Failed to fetch comments.');
-          console.error('Error fetching comments:', error);
+          const { userMessage } = handleApiError(error, 'loading comments');
+          toast.error(userMessage);
         }
       }
     }
@@ -119,37 +95,27 @@ const UserProfile = () => {
   }, [visibleComments, comments]);
 
   const handlePostComment = async (blogId: string) => {
-    const content = newComments[blogId];
-    if (!content || !content.trim()) {
+    const content = newComments[blogId]?.trim();
+    if (!content) {
       toast.error('Comment cannot be empty.');
       return;
     }
     
     setIsCommentLoading(blogId);
-
     try {
-      const response = await apiClient.post(`/blogs/${blogId}/comments`, { content });
-      const newComment = response.data.data.comment;
-      
-      setComments(prev => ({
-        ...prev,
-        [blogId]: [newComment, ...(prev[blogId] || [])],
-      }));
-      
-      setNewComments(prev => ({ ...prev, [blogId]: '' })); // Clear input
+      const response = await blogService.addComment(blogId, content);
+      setComments(prev => ({ ...prev, [blogId]: [response.comment, ...(prev[blogId] || [])] }));
+      setNewComments(prev => ({ ...prev, [blogId]: '' }));
       toast.success('Comment posted!');
-
     } catch (error) {
-      toast.error('Failed to post comment.');
-      console.error('Error posting comment:', error);
+      const { userMessage } = handleApiError(error, 'posting your comment');
+      toast.error(userMessage);
     } finally {
       setIsCommentLoading(null);
     }
   };
 
-  if (loading) {
-    return <Loading fullScreen />;
-  }
+  if (loading) return <Loading fullScreen />;
 
   if (!user) {
     return <div className="text-center p-10 text-xl">User not found.</div>;
@@ -160,7 +126,7 @@ const UserProfile = () => {
       <Card className="mb-4">
         <CardContent className="p-6 flex items-center">
           <Avatar className="h-24 w-24 mr-6">
-            <AvatarImage src={user.avatar || ''} alt={user.name || 'User'} />
+            <AvatarImage src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=3B82F6&color=ffffff`} alt={user.name || 'User'} />
             <AvatarFallback>{user.name ? user.name[0] : 'U'}</AvatarFallback>
           </Avatar>
           <div className="flex-grow">
