@@ -41,3 +41,20 @@ router.get('/me', authenticate, asyncHandler(async (req, res) => {
     user: req.user
   });
 }));
+
+
+
+
+backend exposes:
+
+GET /api/users/:userId → public profile
+
+PUT /api/users/profile → update logged-in user’s profile (name, avatar, bio)
+
+POST /api/users/:userId/follow → follow
+
+DELETE /api/users/:userId/unfollow → unfollow
+
+GET /api/users/likes → liked blogs
+
+GET /api/users/bookmarks → bookmarked blogs

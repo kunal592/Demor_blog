@@ -100,3 +100,44 @@ export const likeComment = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
+
+//notification
+// comment.controller.js
+export const createComment = async (req, res) => {
+  const { content } = req.body;
+  const { id: blogId } = req.params;
+  const userId = req.user.id;
+
+  if (!content) {
+    return res.status(400).json({ success: false, message: 'Comment content is required' });
+  }
+
+  const blog = await prisma.blog.findUnique({ where: { id: blogId } });
+  if (!blog) return res.status(404).json({ success: false, message: 'Blog not found' });
+
+  try {
+    const comment = await prisma.comment.create({
+      data: { content, blogId, userId },
+      include: { user: { select: { id: true, name: true, avatar: true } } },
+    });
+
+    // 🔔 Notify blog author
+    if (blog.authorId !== userId) {
+      await prisma.notification.create({
+        data: {
+          type: 'COMMENT',
+          message: `${req.user.name} commented on your blog "${blog.title}"`,
+          senderId: userId,
+          recipientId: blog.authorId,
+        },
+      });
+    }
+
+    res.status(201).json({ success: true, data: { comment } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Something went wrong' });
+  }
+};

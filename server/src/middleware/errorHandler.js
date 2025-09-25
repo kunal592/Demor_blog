@@ -1,88 +1,37 @@
-/**
- * Global error handling middleware
- * Provides consistent error responses and logging
- */
-
 import { Prisma } from '@prisma/client';
 
-export const errorHandler = (error, req, res, next) => {
+export const errorHandler = (err, req, res, next) => {
   console.error('Error:', {
-    message: error.message,
-    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    message: err?.message,
+    stack: process.env.NODE_ENV === 'development' ? err?.stack : undefined,
     url: req.url,
     method: req.method,
-    timestamp: new Date().toISOString()
   });
 
-  // Prisma error handling
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    switch (error.code) {
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    switch (err.code) {
       case 'P2002':
-        return res.status(400).json({
-          success: false,
-          message: 'A record with this information already exists'
-        });
+        return res.status(400).json({ success: false, message: 'A record with this information already exists' });
       case 'P2025':
-        return res.status(404).json({
-          success: false,
-          message: 'Record not found'
-        });
-      case 'P2003':
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid reference to related record'
-        });
+        return res.status(404).json({ success: false, message: 'Record not found' });
       default:
-        return res.status(400).json({
-          success: false,
-          message: 'Database operation failed'
-        });
+        return res.status(400).json({ success: false, message: 'Database error' });
     }
   }
 
-  // Validation errors
-  if (error.name === 'ValidationError') {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation failed',
-      errors: error.errors
-    });
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({ success: false, message: 'Validation failed', errors: err.errors });
   }
 
-  // JWT errors
-  if (error.name === 'JsonWebTokenError') {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid token'
-    });
+  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+    return res.status(401).json({ success: false, message: err.message });
   }
 
-  if (error.name === 'TokenExpiredError') {
-    return res.status(401).json({
-      success: false,
-      message: 'Token expired'
-    });
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ success: false, message: 'File too large' });
   }
 
-  // File upload errors
-  if (error.code === 'LIMIT_FILE_SIZE') {
-    return res.status(400).json({
-      success: false,
-      message: 'File size too large'
-    });
-  }
-
-  // Default error response
-  res.status(error.status || 500).json({
-    success: false,
-    message: error.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-  });
+  res.status(err.status || 500).json({ success: false, message: err.message || 'Internal server error' });
 };
 
-// Async error wrapper
-export const asyncHandler = (fn) => {
-  return (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-};
+export const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);

@@ -1,13 +1,12 @@
 import express from 'express';
+import { asyncHandler } from '../middleware/errorHandler.js';
+import { getComments, createComment } from '../blog/blog.controller.js';
 import { authenticate } from '../middleware/auth.js';
-import { createComment, likeComment } from './comment.controller.js';
 
 const router = express.Router({ mergeParams: true });
 
-// All routes are protected
-router.use(authenticate);
-
-router.route('/').post(createComment);
-router.route('/:commentId/like').post(likeComment);
+// GET /api/blogs/:slug/comments -> but our blog controllers use blog id. You might map slug->id in frontend or implement lookup
+router.get('/', asyncHandler(getComments));
+router.post('/', authenticate, asyncHandler(createComment));
 
 export { router as commentRoutes };

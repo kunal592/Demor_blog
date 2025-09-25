@@ -1,18 +1,25 @@
-import express from 'express';
-import { authenticate } from '../middleware/auth.js';
+import express from "express";
+import { authenticate } from "../middleware/auth.js";
+import { asyncHandler } from "../middleware/errorHandler.js";
 import {
   getNotifications,
+  getUnreadNotifications,
   markAsRead,
   markAllAsRead,
-} from './notification.controller.js';
+} from "./notification.controller.js";
 
 const router = express.Router();
 
-// All routes are protected
-router.use(authenticate);
+// ✅ Get all notifications (paginated)
+router.get("/", authenticate, asyncHandler(getNotifications));
 
-router.get('/', getNotifications);
-router.patch('/:id/read', markAsRead);
-router.patch('/read-all', markAllAsRead);
+// ✅ Get only unread notifications
+router.get("/unread", authenticate, asyncHandler(getUnreadNotifications));
+
+// ✅ Mark one notification as read
+router.post("/:id/read", authenticate, asyncHandler(markAsRead));
+
+// ✅ Mark all notifications as read
+router.post("/read-all", authenticate, asyncHandler(markAllAsRead));
 
 export { router as notificationRoutes };

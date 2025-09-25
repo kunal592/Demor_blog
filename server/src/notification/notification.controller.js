@@ -1,66 +1,76 @@
-import { prisma } from '../config/database.js';
+import { prisma } from "../config/database.js";
 
-// @desc    Get all notifications for the logged-in user
-// @route   GET /api/notifications
-// @access  Private
-export const getNotifications = async (req, res, next) => {
-  try {
-    const notifications = await prisma.notification.findMany({
-      where: { userId: req.user.id },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        actor: {
-          select: { id: true, name: true, avatar: true },
-        },
-        blog: {
-          select: { id: true, title: true, slug: true },
-        },
-        comment: {
-          select: { id: true, content: true },
-        },
+/**
+ * Get all notifications (paginated)
+ */
+export const getNotifications = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const [notifications, totalCount] = await Promise.all([
+    prisma.notification.findMany({
+      where: { recipientId: req.user.id },
+      include: { sender: { select: { id: true, name: true, avatar: true } } },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: parseInt(limit),
+    }),
+    prisma.notification.count({ where: { recipientId: req.user.id } }),
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      notifications,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: totalCount,
+        pages: Math.ceil(totalCount / parseInt(limit)),
       },
-    });
-    res.status(200).json(notifications);
-  } catch (error) {
-    next(error);
-  }
+    },
+  });
 };
 
-// @desc    Mark a notification as read
-// @route   PATCH /api/notifications/:id/read
-// @access  Private
-export const markAsRead = async (req, res, next) => {
-  try {
-    const notification = await prisma.notification.updateMany({
-      where: {
-        id: req.params.id,
-        userId: req.user.id,
-      },
-      data: { read: true },
-    });
+/**
+ * Get unread notifications
+ */
+export const getUnreadNotifications = async (req, res) => {
+  const notifications = await prisma.notification.findMany({
+    where: { recipientId: req.user.id, isRead: false },
+    include: { sender: { select: { id: true, name: true, avatar: true } } },
+    orderBy: { createdAt: "desc" },
+  });
 
-    if (notification.count === 0) {
-      return res.status(404).json({ message: 'Notification not found' });
-    }
-
-    res.status(200).json({ message: 'Notification marked as read' });
-  } catch (error) {
-    next(error);
-  }
+  res.json({ success: true, data: { notifications } });
 };
 
-// @desc    Mark all notifications as read
-// @route   PATCH /api/notifications/read-all
-// @access  Private
-export const markAllAsRead = async (req, res, next) => {
-  try {
-    await prisma.notification.updateMany({
-      where: { userId: req.user.id },
-      data: { read: true },
-    });
+/**
+ * Mark one notification as read
+ */
+export const markAsRead = async (req, res) => {
+  const { id } = req.params;
 
-    res.status(200).json({ message: 'All notifications marked as read' });
-  } catch (error) {
-    next(error);
+  const notification = await prisma.notification.updateMany({
+    where: { id, recipientId: req.user.id },
+    data: { isRead: true },
+  });
+
+  if (!notification.count) {
+    return res.status(404).json({ success: false, message: "Notification not found" });
   }
+
+  res.json({ success: true, message: "Notification marked as read" });
+};
+
+/**
+ * Mark all notifications as read
+ */
+export const markAllAsRead = async (req, res) => {
+  await prisma.notification.updateMany({
+    where: { recipientId: req.user.id, isRead: false },
+    data: { isRead: true },
+  });
+
+  res.json({ success: true, message: "All notifications marked as read" });
 };

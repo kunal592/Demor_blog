@@ -1,8 +1,8 @@
-
 import express from 'express';
-import { authenticate } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { authenticate } from '../middleware/auth.js';
 import {
+  getUserById,
   getUserLikes,
   getUserBookmarks,
   getUserStats,
@@ -10,31 +10,30 @@ import {
   getUserDashboard,
   getUserBlogs,
   followUser,
-  unfollowUser
-} from './user.controller.js';
+  unfollowUser,
+} from "./user.controller.js";
 
 const router = express.Router();
 
-// Likes
-router.get('/likes', authenticate, asyncHandler(getUserLikes));
-
-// Bookmarks
-router.get('/bookmarks', authenticate, asyncHandler(getUserBookmarks));
-
-// Stats
-router.get('/stats', authenticate, asyncHandler(getUserStats));
-
-// Profile update
-router.put('/profile', authenticate, asyncHandler(updateUserProfile));
-
-// Dashboard
+// Dashboard (authenticated)
 router.get('/dashboard', authenticate, asyncHandler(getUserDashboard));
 
-// Blogs
+// Profile update (auth)
+router.put('/profile', authenticate, asyncHandler(updateUserProfile));
+
+// Likes, bookmarks, stats (auth)
+router.get('/likes', authenticate, asyncHandler(getUserLikes));
+router.get('/bookmarks', authenticate, asyncHandler(getUserBookmarks));
+router.get('/stats', authenticate, asyncHandler(getUserStats));
+
+// User's blogs (auth)
 router.get('/blogs', authenticate, asyncHandler(getUserBlogs));
 
-// Follow
+// Follow/unfollow (auth)
 router.post('/:userId/follow', authenticate, asyncHandler(followUser));
 router.delete('/:userId/unfollow', authenticate, asyncHandler(unfollowUser));
+
+// Public profile (by id)
+router.get('/:userId', asyncHandler(getUserById));
 
 export { router as userRoutes };

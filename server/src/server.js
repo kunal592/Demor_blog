@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -8,55 +7,48 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import passport from 'passport';
 import session from 'express-session';
+import path from 'path';
 
-// Import custom middleware and routes
-import './auth/passport.js'; // Passport configuration
+// configure env
+dotenv.config();
+
+import './auth/passport.js'; // passport strategies
+
+// routers & middleware
 import { errorHandler } from './middleware/errorHandler.js';
 import { authRoutes } from './auth/auth.routes.js';
-import { blogRoutes } from './blog/blog.routes.js';
-import { adminRoutes } from './blog/admin.routes.js';
 import { userRoutes } from './auth/user.routes.js';
+import { blogRoutes } from './blog/blog.routes.js';
+import { commentRoutes } from './comment/comment.routes.js';
 import { contactRoutes } from './notification/contact.routes.js';
 import { notificationRoutes } from './notification/notification.routes.js';
-import { commentRoutes } from './comment/comment.routes.js';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5003;
 
-// Security Middleware
+// security
 app.use(helmet({ contentSecurityPolicy: false }));
-
-// CORS Configuration
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
     credentials: true,
   })
 );
 
-// Rate Limiting
+// rate limiting (only in production typically)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 2000,
-  skip: (req) =>
-    req.path.startsWith('/api/auth/refresh') || req.path.startsWith('/api/auth/me'),
 });
+if (process.env.NODE_ENV === 'production') app.use(limiter);
 
-if (process.env.NODE_ENV === 'production') {
-  app.use(limiter);
-}
-
-// Core Middleware
+// core middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
-// Session and Passport Middleware
-// In a production environment, you should use a more robust session store, such as connect-redis or connect-mongo.
-// See https://expressjs.com/en/resources/middleware/session.html for more details.
+// session/passport (passport is used for redirect flows; tokens are handled by JWT cookies)
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'your_default_secret',
@@ -73,48 +65,25 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// API Routes
+// api mount points
 app.use('/api/auth', authRoutes);
-app.use('/api/blogs', blogRoutes);
-app.use('/api/blogs/:slug/comments', commentRoutes);
-app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/blogs', blogRoutes);
+app.use('/api/blogs/:slug/comments', commentRoutes); // commentRoutes expects /:slug/comments
 app.use('/api/contact', contactRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Health Check
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
-});
+// health
+app.get('/api/health', (req, res) =>
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() })
+);
 
-// Global Error Handler
+// global error handler + 404
 app.use(errorHandler);
+app.use('*', (req, res) => res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` }));
 
-// 404 Handler - Must be last
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route ${req.originalUrl} not found`,
-  });
-});
-
-
-// Graceful Shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
-
-// Start Server
+// start
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📝 Blog API available at http://localhost:${PORT}/api`);
+  console.log(`📝 API available at http://localhost:${PORT}/api`);
 });
