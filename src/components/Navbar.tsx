@@ -1,8 +1,3 @@
-/**
- * Navigation bar component with responsive design and user authentication
- * Features: Mobile menu, user dropdown, search functionality, role-based navigation, and theme toggle
- */
-
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -17,7 +12,7 @@ import {
   Heart,
   Bookmark,
   Sun,
-  Moon
+  Moon,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -55,7 +50,7 @@ const Navbar: React.FC = () => {
           {/* Logo and primary nav */}
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-2">
-              <PenTool className="h-8 w-8 text-blue-600" />
+              <PenTool className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               <span className="text-xl font-bold text-gray-900 dark:text-white">BlogApp</span>
             </Link>
 

@@ -1,8 +1,10 @@
 /**
  * Login Page Component
- * - Integrates Google OAuth via Google Identity Services
- * - Handles user login with backend
- * - Displays features + nice UI/UX
+ * - Integrates Google Identity Services (OAuth 2.0)
+ * - Handles Google login → sends credential (JWT) to backend `/auth/google`
+ * - Stores backend-issued token in localStorage (via AuthContext)
+ * - Redirects to dashboard after login
+ * - Includes marketing features section for better UX
  */
 
 import React, { useEffect, useState } from 'react';
@@ -12,7 +14,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 
 // ------------------------------------------------
-// Google Identity Services typing (for TS support)
+// Global typings for Google Identity SDK
 // ------------------------------------------------
 declare global {
   interface Window {
@@ -23,19 +25,18 @@ declare global {
 
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth(); // use login function from AuthContext
+  const { login } = useAuth(); // our AuthContext login() → sends credential to backend
   const navigate = useNavigate();
 
-  // --------------------------------------
-  // Load Google OAuth script on mount
-  // --------------------------------------
+  // ------------------------------------------------
+  // Load Google Identity script when component mounts
+  // ------------------------------------------------
   useEffect(() => {
     initializeGoogleAuth();
   }, []);
 
-  // Inject Google Identity Services script and initialize
   const initializeGoogleAuth = () => {
-    // Prevent multiple initializations
+    // Avoid re-initializing script if already loaded
     if (window.googleInit) return;
 
     const script = document.createElement('script');
@@ -43,21 +44,21 @@ const Login: React.FC = () => {
     script.async = true;
 
     script.onload = () => {
-      // Ensure Client ID is set in env
-      if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) { // Correctly using VITE_ prefix
-        console.error('Google Client ID not configured');
+      // Ensure Google Client ID is configured
+      if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+        console.error('❌ Google Client ID missing in .env');
         return;
       }
 
-      // Initialize Google sign-in
+      // Initialize Google button
       window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID, // Correctly using VITE_ prefix
-        callback: handleGoogleResponse, // called when user logs in
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse, // callback after successful login
         auto_select: false,
         cancel_on_tap_outside: true,
       });
 
-      // Render the Google button into our container
+      // Render button inside our container
       const buttonElement = document.getElementById('google-signin-button');
       if (buttonElement) {
         window.google.accounts.id.renderButton(buttonElement, {
@@ -69,43 +70,45 @@ const Login: React.FC = () => {
         });
       }
 
-      window.googleInit = true; // mark initialized
+      window.googleInit = true; // mark as initialized
     };
 
     document.head.appendChild(script);
   };
 
-  // --------------------------------------
-  // Handle response from Google sign-in
-  // --------------------------------------
+  // ------------------------------------------------
+  // Handle credential returned from Google login
+  // ------------------------------------------------
   const handleGoogleResponse = async (response: any) => {
     try {
       setLoading(true);
 
-      // Send Google credential to backend → get JWT + user info
+      // Call AuthContext login() → which hits backend `/auth/google`
       await login(response.credential);
 
-      toast.success('Login successful!');
-      navigate('/dashboard'); // redirect after login
+      toast.success('✅ Login successful!');
+      navigate('/dashboard'); // redirect to dashboard
     } catch (error: any) {
-      console.error('Login failed:', error);
+      console.error('❌ Login failed:', error);
       toast.error(error.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Features shown on right-hand side (marketing info)
+  // ------------------------------------------------
+  // Feature highlights shown in right panel
+  // ------------------------------------------------
   const features = [
     {
       icon: Zap,
       title: 'AI-Powered Summaries',
-      description: 'Get instant AI-generated summaries for your blog posts using Gemini AI',
+      description: 'Instant AI-generated summaries for your blogs using Gemini AI',
     },
     {
       icon: Users,
       title: 'Social Features',
-      description: 'Like, bookmark, and share your favorite blog posts with the community',
+      description: 'Like, bookmark, and share blogs with the community',
     },
     {
       icon: Shield,
@@ -114,15 +117,15 @@ const Login: React.FC = () => {
     },
   ];
 
-  // --------------------------------------
-  // Component Render
-  // --------------------------------------
+  // ------------------------------------------------
+  // Render UI
+  // ------------------------------------------------
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
-          {/* ---------- Left Side: Login Card ---------- */}
+          {/* ---------- Left: Login Card ---------- */}
           <div className="max-w-md w-full mx-auto lg:mx-0">
             <div className="bg-white rounded-2xl shadow-xl p-8">
               
@@ -135,7 +138,7 @@ const Login: React.FC = () => {
                   Welcome Back
                 </h2>
                 <p className="text-gray-600">
-                  Sign in to your account to continue writing and reading amazing stories
+                  Sign in to continue reading and writing amazing stories 🚀
                 </p>
               </div>
 
@@ -145,10 +148,10 @@ const Login: React.FC = () => {
                   <div 
                     id="google-signin-button"
                     className={`w-full ${loading ? 'opacity-50 pointer-events-none' : ''}`}
-                  ></div>
+                  />
                 </div>
 
-                {/* Loading spinner when authenticating */}
+                {/* Loader while login request is pending */}
                 {loading && (
                   <div className="text-center">
                     <div className="inline-block animate-spin w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full"></div>
@@ -166,7 +169,7 @@ const Login: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Info about Google login */}
+                {/* Info box about Google OAuth */}
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center space-x-3">
                     <Chrome className="h-5 w-5 text-blue-600" />
@@ -178,7 +181,7 @@ const Login: React.FC = () => {
                 </div>
               </div>
 
-              {/* Footer text */}
+              {/* Footer legal text */}
               <div className="mt-8 text-center">
                 <p className="text-xs text-gray-500">
                   By signing in, you agree to our{' '}
@@ -190,7 +193,7 @@ const Login: React.FC = () => {
             </div>
           </div>
 
-          {/* ---------- Right Side: Features ---------- */}
+          {/* ---------- Right: Features ---------- */}
           <div className="space-y-8 lg:pl-8">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -199,11 +202,11 @@ const Login: React.FC = () => {
               </h1>
               <p className="text-xl text-gray-600 leading-relaxed">
                 Connect with writers and readers from around the world. Share your stories, 
-                discover new perspectives, and engage with content that matters to you.
+                discover perspectives, and engage with meaningful content 🌍
               </p>
             </div>
 
-            {/* Map through features list */}
+            {/* Map through features */}
             <div className="space-y-6">
               {features.map((feature, index) => {
                 const Icon = feature.icon;
@@ -229,7 +232,7 @@ const Login: React.FC = () => {
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
               <h3 className="text-lg font-semibold mb-2">Ready to get started?</h3>
               <p className="text-blue-100 mb-4">
-                Join over 1,000 writers sharing their stories and connecting with readers worldwide.
+                Join thousands of writers sharing their stories with the world 🌟
               </p>
               <div className="flex items-center space-x-4 text-sm">
                 <span className="flex items-center space-x-1">

@@ -1,15 +1,22 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { User } from '../types';
-import apiClient from '../services/apiClient';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { User, AuthState } from '../types';
+import { authService } from '../services/authService';
 
+// ---------------------------------------
+// Context Types
+// ---------------------------------------
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (credential: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
+  isAuthenticated: boolean;
 }
 
+// ---------------------------------------
+// Context Setup
+// ---------------------------------------
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
@@ -20,72 +27,74 @@ export const useAuth = () => {
   return context;
 };
 
-export const useProvideAuth = () => {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+// ---------------------------------------
+// Auth Provider Hook
+// ---------------------------------------
+export const useProvideAuth = (): AuthContextType => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    const refreshAuth = useCallback(async () => {
-        setLoading(true);
-        try {
-            const response = await apiClient.get('/auth/me');
-            if (response.data.data.user) {
-                setUser(response.data.data.user);
-            } else {
-                setUser(null);
-                localStorage.removeItem('token');
-            }
-        } catch (error) {
-            setUser(null);
-            localStorage.removeItem('token');
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+  /**
+   * 🔄 Refresh auth state (get `/auth/me`)
+   */
+  const refreshAuth = useCallback(async () => {
+    setLoading(true);
+    try {
+      const currentUser = await authService.getCurrentUser();
+      setUser(currentUser);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.warn('Auth refresh failed:', error);
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('token');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            refreshAuth();
-        } else {
-            setLoading(false);
-        }
-    }, [refreshAuth]);
+  /**
+   * 🟢 On mount, restore token + check session
+   */
+  useEffect(() => {
+    authService.restoreToken();
+    refreshAuth();
+  }, [refreshAuth]);
 
-    const login = async (credential: string) => {
-        const response = await apiClient.post('/auth/google', { credential });
-        const { token, user } = response.data.data;
-        localStorage.setItem('token', token);
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        setUser(user);
-    };
+  /**
+   * 🔑 Login with Google
+   */
+  const login = async (credential: string) => {
+    const { user, token } = await authService.googleLogin(credential);
+    setUser(user);
+    setIsAuthenticated(true);
+    localStorage.setItem('token', token);
+  };
 
-    const logout = async () => {
-        try {
-            await apiClient.post('/auth/logout');
-        } catch(error) {
-            console.error(error)
-        } finally {
-            localStorage.removeItem('token');
-            delete apiClient.defaults.headers.common['Authorization'];
-            setUser(null);
-        }
-    };
+  /**
+   * 🚪 Logout
+   */
+  const logout = async () => {
+    await authService.logout();
+    setUser(null);
+    setIsAuthenticated(false);
+  };
 
-    return {
-        user,
-        loading,
-        login,
-        logout,
-        refreshAuth,
-    };
+  return {
+    user,
+    loading,
+    login,
+    logout,
+    refreshAuth,
+    isAuthenticated,
+  };
 };
 
-export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
+// ---------------------------------------
+// AuthProvider Component
+// ---------------------------------------
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const auth = useProvideAuth();
-  return (
-    <AuthContext.Provider value={auth}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+};

@@ -5,9 +5,11 @@ class UserService {
   /**
    * Get public profile of a user by ID
    */
-  async getUserById(userId: string) {
+  async getUserById(userId: string): Promise<User> {
     const res = await apiClient.get<ApiResponse<{ user: User }>>(`/users/${userId}`);
-    if (res.data.success && res.data.data) return res.data.data;
+    if (res.data.success && res.data.data?.user) {
+      return res.data.data.user; // ✅ return the actual User, not wrapped
+    }
     throw new Error(res.data.message || 'Failed to fetch user');
   }
 
